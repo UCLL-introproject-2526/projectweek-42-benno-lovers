@@ -1,22 +1,24 @@
+import pygame
 def main():
-    import pygame
+    
 
-
-    # Initialize Pygame
     pygame.init()
 
-    # Tuple representing width and height in pixels
     screen_size = (1024, 768)
 
-    # Create window with given size
-    pygame.display.set_mode(screen_size)
+    surface, screen = create_main_surface(screen_size)
+
+    pygame.draw.circle(surface, (255, 100, 100), (512, 384), 80)
+    screen.blit(surface, (0, 0))
+    pygame.display.flip()
 
 
-    def create_main_surface():
-        pygame.display.set_mode(screen_size)
-        return pygame.Surface(screen_size)
+def create_main_surface(screen_size):
+    display = pygame.display.set_mode(screen_size)
+    surface = pygame.Surface(screen_size)
+    return surface, display
 
-    while True:
-        pass
-    # doe ctrl c in terminal op the escape
+
 main()
+while True:
+    pass
