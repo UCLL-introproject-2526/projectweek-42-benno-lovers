@@ -18,4 +18,5 @@ def main():
 
     while True:
         pass
+    # doe ctrl c in terminal op the escape
 main()
