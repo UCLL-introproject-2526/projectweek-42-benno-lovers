@@ -768,18 +768,16 @@ def run_level(level):
                         # placement preview start
                         selected = None
 
-                        if keys[pygame.K_s]:
-                            placing_type = "SNIPER"
-                            placing_cost = SNIPER_TOWER_COST
-                        elif keys[pygame.K_a]:
-                            placing_type = "SLOW"
-                            placing_cost = SLOW_TOWER_COST
-                        elif keys[pygame.K_d]:
-                            placing_type = "POISON"
-                            placing_cost = POISON_TOWER_COST
+                        placing_type = selected
+
+                        if placing_type == "SNIPER":
+                         placing_cost = SNIPER_TOWER_COST
+                        elif placing_type == "SLOW":
+                         placing_cost = SLOW_TOWER_COST
+                        elif placing_type == "POISON":
+                         placing_cost = POISON_TOWER_COST
                         else:
-                            placing_type = "NORMAL"
-                            placing_cost = TOWER_COST
+                         placing_cost = TOWER_COST
 
                         if DEV_INFINITE_MONEY or money >= placing_cost:
                             placing_preview = True
