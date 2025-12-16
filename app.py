@@ -5,14 +5,15 @@ import random
 pygame.init()
 
 # ================== DISPLAY ==================
-screen = pygame.display.set_mode((0, 0), pygame.NOFRAME)  # borderless fullscreen
+# Borderless fullscreen (werkt op elke resolutie)
+screen = pygame.display.set_mode((0, 0), pygame.NOFRAME)
 pygame.display.set_caption("Tower Defence")
 clock = pygame.time.Clock()
 WIDTH, HEIGHT = screen.get_size()
 FPS = 60
 
 # ================== DEV ==================
-DEV_INFINITE_MONEY = True  # True = money wordt niet afgetrokken + huge startmoney
+DEV_INFINITE_MONEY = True  # debug / sandbox mode
 
 # ================== CONSTANTEN ==================
 TOWER_COST = 50
@@ -22,8 +23,9 @@ POISON_TOWER_COST = 110
 
 SELL_REFUND = 0.75
 MAX_TOWER_LEVEL = 6
+MIN_TOWER_DISTANCE = 48  # base personal space (wordt geschaald)
 
-# Colors
+# ================== COLORS ==================
 BG_COLOR = (30, 30, 30)
 PATH_COLOR = (100, 100, 100)
 
@@ -41,58 +43,76 @@ BASE_COLOR = (200, 50, 50)
 BULLET_COLOR = (255, 255, 0)
 TEXT_COLOR = (240, 240, 240)
 
+# ================== FONTS ==================
 FONT = pygame.font.SysFont(None, 28)
 SMALL_FONT = pygame.font.SysFont(None, 22)
 BIG_FONT = pygame.font.SysFont(None, 72)
 
-# ================== SCALING (van 800x600 basis) ==================
+# ================== SCALING (800x600 basis) ==================
 BASE_W, BASE_H = 800, 600
 sx = WIDTH / BASE_W
 sy = HEIGHT / BASE_H
 SCALE = min(sx, sy)
 
 def sp(p):
+    """Scale position from base resolution"""
     return int(p[0] * sx), int(p[1] * sy)
 
 def spath(path):
+    """Scale entire path"""
     return [sp(pt) for pt in path]
 
 PATH_WIDTH = max(22, int(40 * SCALE))
+MIN_TOWER_DISTANCE = int(MIN_TOWER_DISTANCE * SCALE)
 
-# ================== MAPS (basis 800x600) ==================
+# ================== MAP DATA (BASE RESOLUTION) ==================
 _level_paths_base = {
-    # Map 1 (klassiek)
-    1: [(-50, 550), (50, 550), (50, 200), (200, 150),
-        (300, 300), (600, 300), (600, 100), (450, 100), (450, 550)],
+    # Map 1 — klassiek
+    1: [
+        (-50, 550), (50, 550), (50, 200), (200, 150),
+        (300, 300), (600, 300), (600, 100),
+        (450, 100), (450, 550)
+    ],
 
-    # Map 2 (cool slingerpad)
-    2: [(-50, 300), (150, 300), (150, 100), (650, 100),
-        (650, 500), (300, 500), (300, 250), (550, 250), (550, 550)],
+    # Map 2 — slingerpad
+    2: [
+        (-50, 300), (150, 300), (150, 100),
+        (650, 100), (650, 500), (300, 500),
+        (300, 250), (550, 250), (550, 550)
+    ],
 
-    # Map 3 multi-lane
-    31: [(-50, 180), (120, 180), (120, 80), (420, 80),
-         (420, 260), (560, 260), (560, 550)],
-
-    32: [(850, 420), (680, 420), (680, 520), (260, 520),
-         (260, 320), (560, 320), (560, 550)],
+    # Map 3 — multi-lane
+    31: [
+        (-50, 180), (120, 180), (120, 80),
+        (420, 80), (420, 260), (560, 260), (560, 550)
+    ],
+    32: [
+        (850, 420), (680, 420), (680, 520),
+        (260, 520), (260, 320), (560, 320), (560, 550)
+    ]
 }
 
+# ================== SCALED MAPS ==================
 level_paths = {
     1: [spath(_level_paths_base[1])],
     2: [spath(_level_paths_base[2])],
-    3: [spath(_level_paths_base[31]), spath(_level_paths_base[32])],
+    3: [spath(_level_paths_base[31]), spath(_level_paths_base[32])]
 }
 
 level_base = {
     1: sp((450, 550)),
     2: sp((550, 550)),
-    3: sp((560, 550)),
+    3: sp((560, 550))
 }
 
-level_wave_map = {1: 5, 2: 10, 3: 15}
-
+level_wave_map = {
+    1: 5,
+    2: 10,
+    3: 15
+}
 # ================== OVERLAY ==================
 overlay = None
+
 def start_overlay(text, color=(255, 255, 0), duration_sec=1.4):
     global overlay
     overlay = {"text": text, "color": color, "frames": int(duration_sec * FPS)}
@@ -139,10 +159,59 @@ def is_on_path(x, y, path):
 def is_on_any_path(level, x, y):
     return any(is_on_path(x, y, p) for p in level_paths[level])
 
+def too_close_to_tower(towers, x, y):
+    for t in towers:
+        if math.hypot(t.x - x, t.y - y) < MIN_TOWER_DISTANCE:
+            return True
+    return False
+
 def hp_bar(x, y, hp, max_hp, w, h=6):
     ratio = 0 if max_hp <= 0 else max(0, min(1, hp / max_hp))
     pygame.draw.rect(screen, (255, 0, 0), (x - w//2, y, w, h))
     pygame.draw.rect(screen, (0, 255, 0), (x - w//2, y, int(w * ratio), h))
+
+# ================== PATH PREVIEW (cirkels volgen exact enemy route) ==================
+# Dit tekent een "ghost train" van cirkels die het pad volgen.
+# Gebruik dit in placement preview zodat je ziet hoe enemies lopen.
+def draw_enemy_path_preview(paths, tick, spacing_px=None):
+    if spacing_px is None:
+        spacing_px = max(26, int(34 * SCALE))  # afstand tussen preview-cirkels
+
+    # helper: lineair interpoleren
+    def lerp(a, b, t):
+        return a + (b - a) * t
+
+    for path in paths:
+        # loop segments en leg ghost-cirkels op vaste afstanden
+        for i in range(len(path) - 1):
+            x1, y1 = path[i]
+            x2, y2 = path[i + 1]
+            dx, dy = x2 - x1, y2 - y1
+            seg_len = math.hypot(dx, dy)
+            if seg_len <= 0:
+                continue
+
+            # verschuiving zodat de cirkels "bewegen" langs het pad
+            # tick bepaalt offset in pixels
+            offset = (-tick * max(1.0, 2.2 * SCALE)) % spacing_px
+
+            # plaats meerdere cirkels op dit segment
+            # start bij -offset zodat het mooi doorloopt over segmenten
+            s = -offset
+            while s < seg_len:
+                t = max(0.0, min(1.0, s / seg_len))
+                px = lerp(x1, x2, t)
+                py = lerp(y1, y2, t)
+
+                # subtiele ghost (ring)
+                pygame.draw.circle(
+                    screen,
+                    (160, 160, 160),
+                    (int(px), int(py)),
+                    max(6, int(8 * SCALE)),
+                    1
+                )
+                s += spacing_px
 
 # ================== TARGETING ==================
 TARGET_FIRST = "FIRST"
@@ -182,6 +251,8 @@ class Enemy:
         # status effects
         self.slow_ticks = 0
         self.slow_factor = 1.0
+
+        # poison
         self.poison_ticks = 0
         self.poison_dps = 0.0
 
@@ -189,7 +260,6 @@ class Enemy:
         self.segment_frac = 0.0
 
     def progress(self):
-        # Higher means further: waypoint index + fraction on segment
         return self.i + self.segment_frac
 
     def apply_slow(self, factor, ticks):
@@ -202,6 +272,7 @@ class Enemy:
         self.poison_ticks = max(self.poison_ticks, ticks)
 
     def update_effects(self):
+        # slow
         if self.slow_ticks > 0:
             self.slow_ticks -= 1
             self.speed = self.base_speed * self.slow_factor
@@ -209,16 +280,22 @@ class Enemy:
             self.slow_factor = 1.0
             self.speed = self.base_speed
 
+        # poison (FIX: poison kan nu écht killen + stopt correct)
         if self.poison_ticks > 0:
             self.poison_ticks -= 1
             self.hp -= (self.poison_dps / FPS)
-            if self.hp < 0:
+            if self.hp <= 0:
                 self.hp = 0
+                return True  # <- DIED FROM POISON
         else:
             self.poison_dps = 0.0
 
+        return False
+
     def move(self):
-        self.update_effects()
+        died_from_poison = self.update_effects()
+        if died_from_poison:
+            return "DEAD"  # speciale status voor de loop
 
         if self.i >= len(self.path):
             return True  # reached end
@@ -227,8 +304,6 @@ class Enemy:
         dx, dy = tx - self.x, ty - self.y
         d = math.hypot(dx, dy)
 
-        # update segment fraction (approx)
-        # If d is small, we are near next node -> frac ~ 1
         self.segment_frac = 1.0 - min(1.0, d / max(1.0, 220 * SCALE))
 
         if d < max(0.001, self.speed):
@@ -284,12 +359,20 @@ class TowerBase:
         self.x, self.y = x, y
         self.level = 1
         self.max_level = MAX_TOWER_LEVEL
+
         self.cooldown = 0
-        self.dragging = False  # exploit fix
+        self.dragging = False  # exploit fix: geen aanvallen tijdens drag/merge
+
         self.base_cost = cost
         self.total_value = cost
         self.color = color
+
         self.target_mode = TARGET_FIRST
+
+        # elke subclass zet deze:
+        self.range = int(150 * SCALE)
+        self.fire_rate = 30
+        self.damage = 10
 
     def cycle_target_mode(self):
         idx = TARGET_MODES.index(self.target_mode)
@@ -298,11 +381,44 @@ class TowerBase:
     def can_upgrade(self):
         return self.level < self.max_level
 
+    def upgrade_stats_one_level(self):
+        # overridden
+        return False
+
     def draw_base(self):
         r = max(10, int((15 + self.level) * SCALE))
         pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), r)
         txt = SMALL_FONT.render(str(self.level), True, (0, 0, 0))
         screen.blit(txt, (int(self.x - txt.get_width()/2), int(self.y - txt.get_height()/2)))
+
+    def choose_target(self, enemies):
+        in_range = [e for e in enemies if math.hypot(e.x - self.x, e.y - self.y) <= self.range]
+        if not in_range:
+            return None
+
+        if self.target_mode == TARGET_FIRST:
+            # jouw eis: "altijd de eerste cirkel in de rij" = meest progress
+            return max(in_range, key=lambda e: e.progress())
+        elif self.target_mode == TARGET_STRONG:
+            return max(in_range, key=lambda e: e.hp)
+        else:
+            return min(in_range, key=lambda e: math.hypot(e.x - self.x, e.y - self.y))
+
+    def shoot(self, enemies, bullets):
+        # exploit fix: geen aanvallen tijdens drag/merge
+        if self.dragging:
+            return
+
+        if self.cooldown > 0:
+            self.cooldown -= 1
+            return
+
+        target = self.choose_target(enemies)
+        if not target:
+            return
+
+        bullets.append(Bullet(self.x, self.y, target, self.damage))
+        self.cooldown = self.fire_rate
 
 class Tower(TowerBase):
     def __init__(self, x, y):
@@ -320,27 +436,6 @@ class Tower(TowerBase):
         self.range += int(26 * SCALE)
         self.fire_rate = max(7, self.fire_rate - 4)
         return True
-
-    def shoot(self, enemies, bullets):
-        if self.dragging:
-            return
-        if self.cooldown > 0:
-            self.cooldown -= 1
-            return
-
-        in_range = [e for e in enemies if math.hypot(e.x - self.x, e.y - self.y) <= self.range]
-        if not in_range:
-            return
-
-        if self.target_mode == TARGET_FIRST:
-            target = max(in_range, key=lambda e: e.progress())
-        elif self.target_mode == TARGET_STRONG:
-            target = max(in_range, key=lambda e: e.hp)
-        else:
-            target = min(in_range, key=lambda e: math.hypot(e.x - self.x, e.y - self.y))
-
-        bullets.append(Bullet(self.x, self.y, target, self.damage))
-        self.cooldown = self.fire_rate
 
 class SniperTower(TowerBase):
     def __init__(self, x, y):
@@ -363,27 +458,6 @@ class SniperTower(TowerBase):
         self.range += int(40 * SCALE)
         self.fire_rate = max(20, self.fire_rate - 10)
         return True
-
-    def shoot(self, enemies, bullets):
-        if self.dragging:
-            return
-        if self.cooldown > 0:
-            self.cooldown -= 1
-            return
-
-        in_range = [e for e in enemies if math.hypot(e.x - self.x, e.y - self.y) <= self.range]
-        if not in_range:
-            return
-
-        if self.target_mode == TARGET_FIRST:
-            target = max(in_range, key=lambda e: e.progress())
-        elif self.target_mode == TARGET_STRONG:
-            target = max(in_range, key=lambda e: e.hp)
-        else:
-            target = min(in_range, key=lambda e: math.hypot(e.x - self.x, e.y - self.y))
-
-        bullets.append(Bullet(self.x, self.y, target, self.damage))
-        self.cooldown = self.fire_rate
 
 class SlowTower(TowerBase):
     def __init__(self, x, y):
@@ -412,16 +486,9 @@ class SlowTower(TowerBase):
             self.cooldown -= 1
             return
 
-        in_range = [e for e in enemies if math.hypot(e.x - self.x, e.y - self.y) <= self.range]
-        if not in_range:
+        target = self.choose_target(enemies)
+        if not target:
             return
-
-        if self.target_mode == TARGET_FIRST:
-            target = max(in_range, key=lambda e: e.progress())
-        elif self.target_mode == TARGET_STRONG:
-            target = max(in_range, key=lambda e: e.hp)
-        else:
-            target = min(in_range, key=lambda e: math.hypot(e.x - self.x, e.y - self.y))
 
         bullets.append(Bullet(self.x, self.y, target, self.damage, ("slow", self.slow_factor, self.slow_duration)))
         self.cooldown = self.fire_rate
@@ -454,19 +521,38 @@ class PoisonTower(TowerBase):
             self.cooldown -= 1
             return
 
-        in_range = [e for e in enemies if math.hypot(e.x - self.x, e.y - self.y) <= self.range]
-        if not in_range:
+        target = self.choose_target(enemies)
+        if not target:
             return
-
-        if self.target_mode == TARGET_FIRST:
-            target = max(in_range, key=lambda e: e.progress())
-        elif self.target_mode == TARGET_STRONG:
-            target = max(in_range, key=lambda e: e.hp)
-        else:
-            target = min(in_range, key=lambda e: math.hypot(e.x - self.x, e.y - self.y))
 
         bullets.append(Bullet(self.x, self.y, target, self.damage, ("poison", self.poison_dps, self.poison_duration)))
         self.cooldown = self.fire_rate
+
+# ================== HELPERS (selection/merge) ==================
+def tower_at_pos(towers, mx, my):
+    for t in reversed(towers):
+        rad = max(18, int((26 + t.level) * SCALE))
+        if math.hypot(mx - t.x, my - t.y) <= rad:
+            return t
+    return None
+
+def same_tower_type(a, b):
+    return type(a) is type(b)
+
+def tower_type_name(t):
+    if isinstance(t, SniperTower): return "SNIPER"
+    if isinstance(t, SlowTower): return "SLOW"
+    if isinstance(t, PoisonTower): return "POISON"
+    return "NORMAL"
+
+def preview_stats_for_type(ttype):
+    if ttype == "SNIPER":
+        return SNIPER_COLOR, int(350 * SCALE)
+    if ttype == "SLOW":
+        return SLOW_COLOR, int(170 * SCALE)
+    if ttype == "POISON":
+        return POISON_COLOR, int(160 * SCALE)
+    return TOWER_COLOR, int(150 * SCALE)
 
 # ================== BASE ==================
 class Base:
@@ -482,8 +568,19 @@ class Base:
 
     def draw(self):
         size = max(40, int(55 * SCALE))
-        pygame.draw.rect(screen, BASE_COLOR, (int(self.x - size/2), int(self.y - size/2), size, size))
-        hp_bar(int(self.x), int(self.y - size/2 - 10), self.hp, self.max_hp, max(70, int(95 * SCALE)), h=max(6, int(8 * SCALE)))
+        pygame.draw.rect(
+            screen,
+            BASE_COLOR,
+            (int(self.x - size / 2), int(self.y - size / 2), size, size)
+        )
+        hp_bar(
+            int(self.x),
+            int(self.y - size / 2 - 10),
+            self.hp,
+            self.max_hp,
+            max(70, int(95 * SCALE)),
+            h=max(6, int(8 * SCALE))
+        )
 
 # ================== UI SCREENS ==================
 def instructions_screen():
@@ -491,7 +588,7 @@ def instructions_screen():
     while viewing:
         screen.fill(BG_COLOR)
         title = BIG_FONT.render("Instructies", True, TEXT_COLOR)
-        screen.blit(title, (WIDTH//2 - title.get_width()//2, int(0.08 * HEIGHT)))
+        screen.blit(title, (WIDTH // 2 - title.get_width() // 2, int(0.08 * HEIGHT)))
 
         lines = [
             "Plaatsen (klik INHOUDEN):",
@@ -511,10 +608,11 @@ def instructions_screen():
             "",
             "ESC: terug"
         ]
+
         y0 = int(0.24 * HEIGHT)
         for i, line in enumerate(lines):
             txt = FONT.render(line, True, (210, 210, 210))
-            screen.blit(txt, (WIDTH//2 - txt.get_width()//2, y0 + i * 30))
+            screen.blit(txt, (WIDTH // 2 - txt.get_width() // 2, y0 + i * 30))
 
         pygame.display.flip()
         for e in pygame.event.get():
@@ -524,12 +622,13 @@ def instructions_screen():
             if e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE:
                 viewing = False
 
+
 def start_screen():
     selecting = True
     while selecting:
         screen.fill(BG_COLOR)
         title = BIG_FONT.render("Tower Defence", True, TEXT_COLOR)
-        screen.blit(title, (WIDTH//2 - title.get_width()//2, int(0.10 * HEIGHT)))
+        screen.blit(title, (WIDTH // 2 - title.get_width() // 2, int(0.10 * HEIGHT)))
 
         mx, my = pygame.mouse.get_pos()
         entries = ["Level 1", "Level 2", "Level 3", "Instructies"]
@@ -539,7 +638,7 @@ def start_screen():
 
         for i, name in enumerate(entries):
             text = FONT.render(name, True, (255, 255, 0))
-            rect = text.get_rect(center=(WIDTH//2, y0 + i * step))
+            rect = text.get_rect(center=(WIDTH // 2, y0 + i * step))
             if rect.collidepoint(mx, my):
                 pygame.draw.rect(screen, (255, 255, 150), rect.inflate(30, 16), border_radius=8)
             screen.blit(text, rect)
@@ -578,35 +677,12 @@ def draw_hud(money, score, base_hp, wave, max_waves):
     screen.blit(FONT.render(f"A + LMB = Slow ({SLOW_TOWER_COST}$)", True, (200, 200, 200)), (rx, 60))
     screen.blit(FONT.render(f"D + LMB = Poison ({POISON_TOWER_COST}$)", True, (200, 200, 200)), (rx, 85))
 
-    hint = SMALL_FONT.render("Hold+Release to place | Drag=merge | T=target | X=sell | ESC=quit", True, (170, 170, 170))
+    hint = SMALL_FONT.render(
+        "Hold+Release to place | Drag=merge | T=target | X=sell | ESC=menu",
+        True,
+        (170, 170, 170)
+    )
     screen.blit(hint, (10, HEIGHT - hint.get_height() - 10))
-
-# ================== HELPERS ==================
-def tower_at_pos(towers, mx, my):
-    for t in reversed(towers):
-        rad = max(18, int((26 + t.level) * SCALE))
-        if math.hypot(mx - t.x, my - t.y) <= rad:
-            return t
-    return None
-
-def same_tower_type(a, b):
-    return type(a) is type(b)
-
-def tower_type_name(t):
-    if isinstance(t, SniperTower): return "SNIPER"
-    if isinstance(t, SlowTower): return "SLOW"
-    if isinstance(t, PoisonTower): return "POISON"
-    return "NORMAL"
-
-def preview_stats_for_type(ttype):
-    # returns (color, range)
-    if ttype == "SNIPER":
-        return SNIPER_COLOR, int(350 * SCALE)
-    if ttype == "SLOW":
-        return SLOW_COLOR, int(170 * SCALE)
-    if ttype == "POISON":
-        return POISON_COLOR, int(160 * SCALE)
-    return TOWER_COLOR, int(150 * SCALE)
 
 # ================== LEVEL LOOP ==================
 def run_level(level):
@@ -647,12 +723,15 @@ def run_level(level):
     placing_type = None
     placing_cost = 0
 
+    tick = 0  # voor moving path preview
+
     running = True
     while running:
         clock.tick(FPS)
         screen.fill(BG_COLOR)
         mx, my = pygame.mouse.get_pos()
         keys = pygame.key.get_pressed()
+        tick += 1
 
         # ------------------ EVENTS ------------------
         for event in pygame.event.get():
@@ -675,7 +754,7 @@ def run_level(level):
 
             if event.type == pygame.MOUSEBUTTONDOWN and not game_over:
                 if event.button == 1:
-                    # if click on tower -> start drag for merge
+                    # klik op tower = drag voor merge
                     t = tower_at_pos(towers, mx, my)
                     if t:
                         selected = t
@@ -686,7 +765,7 @@ def run_level(level):
                         placing_type = None
                         placing_cost = 0
                     else:
-                        # start placement preview ONLY (no instant place)
+                        # placement preview start
                         selected = None
 
                         if keys[pygame.K_s]:
@@ -711,10 +790,14 @@ def run_level(level):
 
             if event.type == pygame.MOUSEBUTTONUP and not game_over:
                 if event.button == 1:
-                    # placement happens on RELEASE
+                    # ------------------ PLACE ON RELEASE ------------------
                     if placing_preview:
-                        if not is_on_any_path(level, mx, my):
-                            # place tower
+                        valid = (
+                            not is_on_any_path(level, mx, my)
+                            and not too_close_to_tower(towers, mx, my)
+                        )
+
+                        if valid:
                             if placing_type == "SNIPER":
                                 towers.append(SniperTower(mx, my))
                             elif placing_type == "SLOW":
@@ -732,7 +815,7 @@ def run_level(level):
                         placing_type = None
                         placing_cost = 0
 
-                    # merge drag release
+                    # ------------------ MERGE ON RELEASE ------------------
                     if dragged:
                         merged = False
                         for t in towers:
@@ -755,7 +838,7 @@ def run_level(level):
                         dragged = None
                         drag_origin = None
 
-        # drag follow mouse (visual only) — but snaps back if not merged
+        # drag follow mouse (visual only) — snaps back if not merged
         if dragged and not game_over:
             dragged.x, dragged.y = mx, my
 
@@ -775,7 +858,6 @@ def run_level(level):
                     spawn_timer = 0
                     path_to_use = paths[(wave + enemies_spawned) % len(paths)]
 
-                    # mix: fast / normal / strong
                     r = random.random()
                     if r < 0.25:
                         e = FastEnemy(path_to_use)
@@ -794,7 +876,7 @@ def run_level(level):
 
                     enemies_spawned += 1
 
-                # boss wave: spawn boss after normals
+                # boss wave
                 if is_boss_wave(wave) and enemies_spawned >= enemies_per_wave and not boss_spawned:
                     if spawn_timer >= int(0.9 * FPS):
                         path_to_use = paths[wave % len(paths)]
@@ -828,10 +910,16 @@ def run_level(level):
                             pygame.display.flip()
                         return ("MENU", None)
 
-        # ------------------ ENEMIES UPDATE (end => damage once => remove) ------------------
+        # ------------------ ENEMIES UPDATE ------------------
+        # Belangrijk: Enemy.move() kan "DEAD" teruggeven door poison (DEEL 2 fix).
         for e in enemies[:]:
-            reached_end = e.move()
-            if reached_end:
+            res = e.move()
+
+            if res == "DEAD":
+                enemies.remove(e)
+                continue
+
+            if res is True:  # reached end
                 base.take_damage(e.damage)
                 enemies.remove(e)
                 if base.hp <= 0:
@@ -880,10 +968,13 @@ def run_level(level):
         for t in towers:
             t.draw_base()
 
-        # placement preview ghost + range
+        # ------------------ PLACEMENT PREVIEW ------------------
         if placing_preview and placing_type:
+            # bewegende path preview (cirkels volgen pad)
+            draw_enemy_path_preview(paths, tick)
+
             color, rng = preview_stats_for_type(placing_type)
-            valid = not is_on_any_path(level, mx, my)
+            valid = (not is_on_any_path(level, mx, my)) and (not too_close_to_tower(towers, mx, my))
             ghost_col = color if valid else (220, 80, 80)
 
             pygame.draw.circle(screen, ghost_col, (mx, my), max(12, int(18 * SCALE)), 2)
@@ -892,11 +983,17 @@ def run_level(level):
             tip = SMALL_FONT.render("Hold LMB... release to place", True, (230, 230, 230))
             screen.blit(tip, (mx + 18, my + 18))
 
-        # hover/selected info + range circle
+        # ------------------ HOVER/SELECT INFO ------------------
         hovered = tower_at_pos(towers, mx, my)
         info_target = hovered if hovered else selected
         if info_target and info_target in towers:
-            pygame.draw.circle(screen, (255, 255, 255), (int(info_target.x), int(info_target.y)), int(info_target.range), 1)
+            pygame.draw.circle(
+                screen,
+                (255, 255, 255),
+                (int(info_target.x), int(info_target.y)),
+                int(info_target.range),
+                1
+            )
 
             ttype = tower_type_name(info_target)
             lvl = f"{info_target.level}/{info_target.max_level}"
@@ -916,11 +1013,11 @@ def run_level(level):
             pad = 10
             box_h = len(renders) * (SMALL_FONT.get_height() + 4) + pad
 
-            box_x = min(WIDTH - (box_w + 2*pad) - 10, int(info_target.x + 25))
+            box_x = min(WIDTH - (box_w + 2 * pad) - 10, int(info_target.x + 25))
             box_y = max(10, int(info_target.y - box_h - 15))
 
-            pygame.draw.rect(screen, (15, 15, 15), (box_x, box_y, box_w + 2*pad, box_h), border_radius=8)
-            pygame.draw.rect(screen, (70, 70, 70), (box_x, box_y, box_w + 2*pad, box_h), 2, border_radius=8)
+            pygame.draw.rect(screen, (15, 15, 15), (box_x, box_y, box_w + 2 * pad, box_h), border_radius=8)
+            pygame.draw.rect(screen, (70, 70, 70), (box_x, box_y, box_w + 2 * pad, box_h), 2, border_radius=8)
 
             yy = box_y + 6
             for r in renders:
@@ -928,7 +1025,13 @@ def run_level(level):
                 yy += r.get_height() + 4
 
         if selected and selected in towers:
-            pygame.draw.circle(screen, (255, 255, 255), (int(selected.x), int(selected.y)), max(22, int((26 + selected.level) * SCALE)), 2)
+            pygame.draw.circle(
+                screen,
+                (255, 255, 255),
+                (int(selected.x), int(selected.y)),
+                max(22, int((26 + selected.level) * SCALE)),
+                2
+            )
 
         for b in bullets:
             b.draw()
@@ -939,8 +1042,8 @@ def run_level(level):
         if game_over:
             text = BIG_FONT.render("GAME OVER", True, (255, 0, 0))
             sub = FONT.render("ESC = Menu", True, (255, 200, 200))
-            screen.blit(text, (WIDTH//2 - text.get_width()//2, HEIGHT//2 - text.get_height()))
-            screen.blit(sub, (WIDTH//2 - sub.get_width()//2, HEIGHT//2 + 10))
+            screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 - text.get_height()))
+            screen.blit(sub, (WIDTH // 2 - sub.get_width() // 2, HEIGHT // 2 + 10))
 
         pygame.display.flip()
 
