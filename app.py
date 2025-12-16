@@ -1,309 +1,294 @@
 import pygame
 import math
-import random
 
 pygame.init()
 
-# ------------------ CONSTANTEN ------------------
+# ================== CONSTANTEN ==================
 WIDTH, HEIGHT = 800, 600
 FPS = 60
+
 TOWER_COST = 50
 SNIPER_TOWER_COST = 120
+SELL_REFUND = 0.75
+MAX_LEVEL = 6
 
 BG_COLOR = (30, 30, 30)
 PATH_COLOR = (100, 100, 100)
 ENEMY_COLOR = (200, 50, 50)
-STRONG_ENEMY_COLOR = (50, 50, 200)
 TOWER_COLOR = (50, 200, 50)
+SNIPER_COLOR = (50, 150, 255)
 BASE_COLOR = (200, 50, 50)
 BULLET_COLOR = (255, 255, 0)
 
-FONT = pygame.font.SysFont(None, 36)
-BIG_FONT = pygame.font.SysFont(None, 72)
+FONT = pygame.font.SysFont(None, 24)
+BIG_FONT = pygame.font.SysFont(None, 52)
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Tower Defence")
+pygame.display.set_caption("Tower Defence – Merge Edition")
 clock = pygame.time.Clock()
 
 PATH_WIDTH = 40
 
-# ------------------ LEVEL MAPS ------------------
-level_paths = {
-    1: [(-50, 550), (50, 550), (50, 200), (200, 150),
-        (300, 300), (600, 300), (600, 100), (450, 100), (450, 550)],
-    2: [
-        {'spawn': (-50, 500), 'path': [(-50, 500), (100, 500), (100, 200), (400, 200),
-                                       (400, 400), (700, 400), (700, 100), (600, 100), (600, 550)]},
-        {'spawn': (850, 300), 'path': [(850, 300), (600, 300), (600, 150), (400, 150),
-                                       (400, 450), (200, 450), (200, 550), (450, 550)]}
-    ]
-}
+# ================== LEVEL ==================
+path = [(-50, 550), (50, 550), (50, 200), (200, 150),
+        (300, 300), (600, 300), (600, 100), (450, 100), (450, 550)]
+base_pos = (450, 550)
 
-level_base = {1: (450, 550), 2: (450, 550)}
-level_wave_map = {1: 5, 2: 10, 3: 15}
+# ================== HULPFUNCTIES ==================
+def draw_path():
+    for i in range(len(path)-1):
+        pygame.draw.line(screen, PATH_COLOR, path[i], path[i+1], PATH_WIDTH)
+        pygame.draw.circle(screen, PATH_COLOR, path[i], PATH_WIDTH//2)
+    pygame.draw.circle(screen, PATH_COLOR, path[-1], PATH_WIDTH//2)
 
-# ------------------ OVERLAY ANIMATIE ------------------
-overlay = None
-
-def start_overlay(text, color=(255, 255, 0), duration=2):
-    global overlay
-    overlay = {
-        "text": text,
-        "color": color,
-        "frames": int(duration * FPS)
-    }
-
-def draw_overlay():
-    global overlay
-    if not overlay:
-        return
-
-    fade_time = int(0.5 * FPS)
-    alpha = 255
-    if overlay["frames"] < fade_time:
-        alpha = int(255 * overlay["frames"] / fade_time)
-
-    surf = BIG_FONT.render(overlay["text"], True, overlay["color"]).convert_alpha()
-    surf.set_alpha(alpha)
-    screen.blit(surf, (WIDTH//2 - surf.get_width()//2,
-                       HEIGHT//2 - surf.get_height()//2))
-
-    overlay["frames"] -= 1
-    if overlay["frames"] <= 0:
-        overlay = None
-
-# ------------------ FUNCTIES ------------------
-def draw_path(surface, path, width):
-    for i in range(len(path) - 1):
-        pygame.draw.line(surface, PATH_COLOR, path[i], path[i + 1], width)
-        pygame.draw.circle(surface, PATH_COLOR, path[i], width // 2)
-    pygame.draw.circle(surface, PATH_COLOR, path[-1], width // 2)
-
-def is_on_path(x, y, path):
-    for i in range(len(path) - 1):
-        x1, y1 = path[i]
-        x2, y2 = path[i + 1]
-        px, py = x2 - x1, y2 - y1
-        norm = px*px + py*py
-        u = ((x-x1)*px + (y-y1)*py) / norm if norm else 0
-        u = max(0, min(1, u))
-        dx, dy = x1 + u*px - x, y1 + u*py - y
-        if math.hypot(dx, dy) <= PATH_WIDTH//2 + 5:
+def is_on_path(x, y):
+    for i in range(len(path)-1):
+        x1,y1 = path[i]
+        x2,y2 = path[i+1]
+        px,py = x2-x1, y2-y1
+        norm = px*px+py*py
+        u = ((x-x1)*px+(y-y1)*py)/norm if norm else 0
+        u = max(0,min(1,u))
+        dx,dy = x1+u*px-x, y1+u*py-y
+        if math.hypot(dx,dy) <= PATH_WIDTH//2+5:
             return True
     return False
 
-def start_screen(levels_unlocked):
-    while True:
-        screen.fill(BG_COLOR)
-        title = BIG_FONT.render("Tower Defence", True, (255,255,255))
-        screen.blit(title, (WIDTH//2-title.get_width()//2, 50))
-
-        mouse = pygame.mouse.get_pos()
-        buttons = []
-
-        for i in range(1,4):
-            unlocked = levels_unlocked.get(i, False)
-            color = (255,255,0) if unlocked else (100,100,100)
-            txt = FONT.render(f"Level {i}", True, color)
-            rect = txt.get_rect(center=(WIDTH//2, 150+i*80))
-            if unlocked and rect.collidepoint(mouse):
-                pygame.draw.rect(screen, (255,255,150), rect.inflate(20,10), border_radius=5)
-            screen.blit(txt, rect)
-            buttons.append((rect,i,unlocked))
-
-        pygame.display.flip()
-
-        for e in pygame.event.get():
-            if e.type == pygame.QUIT:
-                pygame.quit(); exit()
-            if e.type == pygame.MOUSEBUTTONDOWN:
-                for rect, lvl, ok in buttons:
-                    if ok and rect.collidepoint(e.pos):
-                        return lvl
-
-# ------------------ CLASSES ------------------
+# ================== CLASSES ==================
 class Enemy:
-    def __init__(self, path, x, y, hp=100, dmg=10, speed=2):
-        self.path = path
-        self.x, self.y = x, y
-        self.hp, self.damage, self.speed = hp, dmg, speed
+    def __init__(self):
+        self.x, self.y = path[0]
+        self.speed = 2
+        self.hp = 100
         self.index = 1
-        self.attacking = False
-        self.timer = 60
-        self.reward_money = 10
-        self.reward_score = 10
 
     def move(self):
-        if self.attacking: return
-        if self.index >= len(self.path):
-            self.attacking = True
+        if self.index >= len(path):
             return
-        tx, ty = self.path[self.index]
-        dx, dy = tx-self.x, ty-self.y
-        d = math.hypot(dx, dy)
+        tx,ty = path[self.index]
+        dx,dy = tx-self.x, ty-self.y
+        d = math.hypot(dx,dy)
         if d < self.speed:
             self.index += 1
         else:
             self.x += self.speed*dx/d
             self.y += self.speed*dy/d
 
-    def attack(self, base):
-        self.timer -= 1
-        if self.timer <= 0:
-            base.hp -= self.damage
-            self.timer = 60
-
     def draw(self):
-        pygame.draw.circle(screen, ENEMY_COLOR, (int(self.x), int(self.y)), 15)
-
-class StrongEnemy(Enemy):
-    def __init__(self, path, x, y):
-        super().__init__(path, x, y, 300, 25, 1.5)
-        self.reward_money = 25
-        self.reward_score = 30
-
-    def draw(self):
-        pygame.draw.circle(screen, STRONG_ENEMY_COLOR, (int(self.x), int(self.y)), 20)
+        pygame.draw.circle(screen, ENEMY_COLOR, (int(self.x),int(self.y)), 14)
 
 class Bullet:
     def __init__(self, x, y, target, dmg):
-        self.x, self.y, self.target, self.dmg = x, y, target, dmg
+        self.x,self.y = x,y
+        self.target = target
+        self.dmg = dmg
         self.speed = 5
 
     def move(self):
-        dx, dy = self.target.x-self.x, self.target.y-self.y
-        d = math.hypot(dx, dy)
+        dx,dy = self.target.x-self.x, self.target.y-self.y
+        d = math.hypot(dx,dy)
         if d:
             self.x += self.speed*dx/d
             self.y += self.speed*dy/d
 
     def draw(self):
-        pygame.draw.circle(screen, BULLET_COLOR, (int(self.x), int(self.y)), 5)
+        pygame.draw.circle(screen, BULLET_COLOR, (int(self.x),int(self.y)), 4)
 
 class Tower:
-    def __init__(self, x, y):
-        self.x, self.y = x, y
-        self.range, self.cool, self.rate, self.dmg = 150, 0, 30, 25
+    def __init__(self,x,y):
+        self.x,self.y = x,y
+        self.level = 1
+        self.range = 150
+        self.fire_rate = 30
+        self.damage = 25
+        self.cooldown = 0
+        self.type = "normal"
         self.color = TOWER_COLOR
+        self.base_cost = TOWER_COST
+        self.total_value = self.base_cost
+        self.dragging = False
 
-    def shoot(self, enemies, bullets):
-        if self.cool: self.cool -= 1; return
+    def shoot(self,enemies,bullets):
+        if self.cooldown > 0:
+            self.cooldown -= 1
+            return
         for e in enemies:
-            if math.hypot(e.x-self.x, e.y-self.y) < self.range and not e.attacking:
-                bullets.append(Bullet(self.x, self.y, e, self.dmg))
-                self.cool = self.rate
+            if math.hypot(e.x-self.x,e.y-self.y)<=self.range:
+                bullets.append(Bullet(self.x,self.y,e,self.damage))
+                self.cooldown = self.fire_rate
                 break
 
+    def upgrade(self):
+        if self.level >= MAX_LEVEL:
+            return
+        self.level += 1
+        self.damage += 15
+        self.range += 20
+        self.fire_rate = max(8,self.fire_rate-3)
+        self.total_value += self.base_cost
+
     def draw(self):
-        pygame.draw.circle(screen, self.color, (self.x, self.y), 15)
+        pygame.draw.circle(screen,self.color,(self.x,self.y),14+self.level)
+        if self.dragging:
+            pygame.draw.circle(screen,(255,255,255),(self.x,self.y),24,2)
 
 class SniperTower(Tower):
-    def __init__(self, x, y):
-        super().__init__(x, y)
-        self.range, self.rate, self.dmg = 350, 90, 100
-        self.color = (50,150,255)
+    def __init__(self,x,y):
+        super().__init__(x,y)
+        self.range = 360
+        self.fire_rate = 90
+        self.damage = 100
+        self.type = "sniper"
+        self.color = SNIPER_COLOR
+        self.base_cost = SNIPER_TOWER_COST
+        self.total_value = self.base_cost
 
-    def draw(self):
-        pygame.draw.circle(screen, self.color, (self.x, self.y), 22)
+    def upgrade(self):
+        if self.level >= MAX_LEVEL:
+            return
+        self.level += 1
+        self.damage += 35
+        self.range += 35
+        self.fire_rate = max(25,self.fire_rate-8)
+        self.total_value += self.base_cost
 
 class Base:
-    def __init__(self, x, y):
-        self.x, self.y = x, y
-        self.max_hp = 200
-        self.hp = self.max_hp
+    def __init__(self,x,y):
+        self.x,self.y = x,y
+        self.hp = 200
 
     def draw(self):
-        pygame.draw.rect(screen, BASE_COLOR, (self.x-25, self.y-25, 50, 50))
-        pygame.draw.rect(screen, (255,0,0), (self.x-25, self.y-40, 50, 8))
-        pygame.draw.rect(screen, (0,255,0), (self.x-25, self.y-40, 50*self.hp/self.max_hp, 8))
+        pygame.draw.rect(screen, BASE_COLOR, (self.x-25,self.y-25,50,50))
 
-# ------------------ START ------------------
-levels_unlocked = {1: True, 2: False, 3: False}
-level = start_screen(levels_unlocked)
+# ================== GAME ==================
+enemies=[]
+towers=[]
+bullets=[]
+base = Base(*base_pos)
 
-while True:
-    max_waves = level_wave_map[level]
-    enemies, towers, bullets = [], [], []
-    base = Base(*level_base[level])
-    money, score = 100, 0
-    wave, spawned, per_wave = 1, 0, 5
-    timer, started, game_over = 0, False, False
+money = 250
+dragged = None
+drag_origin = None
+selected = None
 
-    while True:
-        clock.tick(FPS)
-        screen.fill(BG_COLOR)
+spawn_timer = 0
 
-        for e in pygame.event.get():
-            if e.type == pygame.QUIT:
-                pygame.quit(); exit()
-            if e.type == pygame.MOUSEBUTTONDOWN and not game_over:
-                x,y = e.pos
-                paths = [level_paths[level]] if level == 1 else [p['path'] for p in level_paths[2]]
-                if not any(is_on_path(x,y,p) for p in paths):
-                    if e.button == 1 and money >= 50:
-                        towers.append(Tower(x,y)); money -= 50
-                    if e.button == 3 and money >= 120:
-                        towers.append(SniperTower(x,y)); money -= 120
+# ================== LOOP ==================
+running=True
+while running:
+    clock.tick(FPS)
+    screen.fill(BG_COLOR)
+    mouse = pygame.mouse.get_pos()
+    keys = pygame.key.get_pressed()
 
-        if not started:
-            start_overlay(f"Wave {wave} starting!")
-            started = True
+    for e in pygame.event.get():
+        if e.type == pygame.QUIT:
+            running=False
 
-        timer += 1
-        if timer > 120 and spawned < per_wave:
-            if level == 1:
-                path = level_paths[1]; spawn = path[0]
+        # ---------- MOUSE DOWN ----------
+        if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
+            x,y = e.pos
+            selected = None
+
+            for t in reversed(towers):
+                if math.hypot(x-t.x,y-t.y)<=20:
+                    dragged = t
+                    drag_origin = (t.x, t.y)
+                    t.dragging = True
+                    selected = t
+                    break
             else:
-                info = level_paths[2][wave % 2]
-                path, spawn = info['path'], info['spawn']
-            enemy = StrongEnemy(path,*spawn) if spawned%2==0 else Enemy(path,*spawn)
-            enemies.append(enemy)
-            spawned += 1; timer = 0
+                if not is_on_path(x,y):
+                    if keys[pygame.K_s] and money>=SNIPER_TOWER_COST:
+                        towers.append(SniperTower(x,y))
+                        money-=SNIPER_TOWER_COST
+                    elif money>=TOWER_COST:
+                        towers.append(Tower(x,y))
+                        money-=TOWER_COST
 
-        for enemy in enemies[:]:
-            enemy.move()
-            if enemy.attacking:
-                enemy.attack(base)
-                if base.hp <= 0: game_over = True
+        # ---------- MOUSE UP ----------
+        if e.type == pygame.MOUSEBUTTONUP and e.button == 1 and dragged:
+            merged = False
+            for t in towers:
+                if t is not dragged:
+                    if (t.type == dragged.type and
+                        t.level == dragged.level and
+                        t.level < MAX_LEVEL and
+                        math.hypot(t.x-dragged.x,t.y-dragged.y)<=25):
+                        t.upgrade()
+                        towers.remove(dragged)
+                        merged = True
+                        break
 
-        for t in towers:
-            t.shoot(enemies, bullets)
+            if not merged:
+                dragged.x, dragged.y = drag_origin
 
-        for b in bullets[:]:
-            if b.target not in enemies:
-                bullets.remove(b); continue
-            b.move()
-            if math.hypot(b.x-b.target.x, b.y-b.target.y) < 10:
-                b.target.hp -= b.dmg
-                bullets.remove(b)
-                if b.target.hp <= 0:
-                    enemies.remove(b.target)
-                    money += b.target.reward_money
-                    score += b.target.reward_score
+            dragged.dragging = False
+            dragged = None
+            drag_origin = None
 
-        if spawned >= per_wave and not enemies:
-            wave += 1; spawned = 0; per_wave += 2; started = False
-            if wave > max_waves:
-                levels_unlocked[level+1] = True
-                start_overlay(f"Level {level} Completed!", (0,255,0), 3)
-                pygame.time.wait(2000)
-                level = start_screen(levels_unlocked)
-                break
+        # ---------- SELL ----------
+        if e.type == pygame.KEYDOWN and e.key == pygame.K_x and selected:
+            refund = int(selected.total_value * SELL_REFUND)
+            money += refund
+            towers.remove(selected)
+            selected = None
 
-        if level == 1:
-            draw_path(screen, level_paths[1], PATH_WIDTH)
-        else:
-            for p in level_paths[2]:
-                draw_path(screen, p['path'], PATH_WIDTH)
+    # ---------- DRAG FOLLOW ----------
+    if dragged:
+        dragged.x, dragged.y = mouse
 
-        base.draw()
-        for e in enemies: e.draw()
-        for t in towers: t.draw()
-        for b in bullets: b.draw()
+    # ---------- SPAWN ----------
+    spawn_timer += 1
+    if spawn_timer > 120:
+        enemies.append(Enemy())
+        spawn_timer = 0
 
-        screen.blit(FONT.render(f"Money: {money}", True, (255,255,255)), (10,10))
-        screen.blit(FONT.render(f"Base HP: {base.hp}", True, (255,255,255)), (10,40))
-        screen.blit(FONT.render(f"Wave {wave}/{max_waves}", True, (255,255,255)), (10,70))
+    for enemy in enemies[:]:
+        enemy.move()
+        if enemy.index >= len(path):
+            enemies.remove(enemy)
 
-        draw_overlay()
-        pygame.display.flip()
+    for t in towers:
+        t.shoot(enemies,bullets)
+
+    for b in bullets[:]:
+        if b.target not in enemies:
+            bullets.remove(b); continue
+        b.move()
+        if math.hypot(b.x-b.target.x,b.y-b.target.y)<10:
+            b.target.hp-=b.dmg
+            bullets.remove(b)
+            if b.target.hp<=0:
+                enemies.remove(b.target)
+
+    # ---------- DRAW ----------
+    draw_path()
+    base.draw()
+
+    for e in enemies: e.draw()
+    for t in towers:
+        t.draw()
+        if math.hypot(mouse[0]-t.x,mouse[1]-t.y)<=25:
+            txt = f"{t.type.upper()} Lv {t.level}/{MAX_LEVEL} | Value {t.total_value}$"
+            info = FONT.render(txt,True,(255,255,255))
+            screen.blit(info,(t.x-info.get_width()//2,t.y-40))
+
+    for b in bullets: b.draw()
+
+    # ---------- UI ----------
+    screen.blit(FONT.render(f"Money: {money}$",True,(255,255,255)),(10,10))
+
+    controls = [
+        "LMB: Place Tower",
+        "S + LMB: Place Sniper",
+        "Drag same type + level: MERGE",
+        "X: Sell selected (75%)",
+        "Max Level: 6"
+    ]
+    for i,c in enumerate(controls):
+        screen.blit(FONT.render(c,True,(200,200,200)),(WIDTH-300,10+i*20))
+
+    pygame.display.flip()
+
+pygame.quit()
