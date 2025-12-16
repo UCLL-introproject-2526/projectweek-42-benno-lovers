@@ -1,0 +1,57 @@
+import pygame
+from settings import screen, PATH_COLOR, SCALE
+import math
+
+def hp_bar(x, y, hp, max_hp, w, h=6):
+    ratio = 0 if max_hp <= 0 else max(0, min(1, hp / max_hp))
+    pygame.draw.rect(screen, (255, 0, 0), (x - w//2, y, w, h))
+    pygame.draw.rect(screen, (0, 255, 0), (x - w//2, y, int(w * ratio), h))
+
+def draw_path(surface, path, width):
+    for i in range(len(path) - 1):
+        pygame.draw.line(surface, PATH_COLOR, path[i], path[i + 1], width)
+        pygame.draw.circle(surface, PATH_COLOR, path[i], width // 2)
+    pygame.draw.circle(surface, PATH_COLOR, path[-1], width // 2)
+
+# ================== PATH PREVIEW (cirkels volgen exact enemy route) ==================
+# Dit tekent een "ghost train" van cirkels die het pad volgen.
+# Gebruik dit in placement preview zodat je ziet hoe enemies lopen.
+def draw_enemy_path_preview(paths, tick, spacing_px=None):
+    if spacing_px is None:
+        spacing_px = max(26, int(34 * SCALE))  # afstand tussen preview-cirkels
+
+    # helper: lineair interpoleren
+    def lerp(a, b, t):
+        return a + (b - a) * t
+
+    for path in paths:
+        # loop segments en leg ghost-cirkels op vaste afstanden
+        for i in range(len(path) - 1):
+            x1, y1 = path[i]
+            x2, y2 = path[i + 1]
+            dx, dy = x2 - x1, y2 - y1
+            seg_len = math.hypot(dx, dy)
+            if seg_len <= 0:
+                continue
+
+            # verschuiving zodat de cirkels "bewegen" langs het pad
+            # tick bepaalt offset in pixels
+            offset = (-tick * max(1.0, 2.2 * SCALE)) % spacing_px
+
+            # plaats meerdere cirkels op dit segment
+            # start bij -offset zodat het mooi doorloopt over segmenten
+            s = -offset
+            while s < seg_len:
+                t = max(0.0, min(1.0, s / seg_len))
+                px = lerp(x1, x2, t)
+                py = lerp(y1, y2, t)
+
+                # subtiele ghost (ring)
+                pygame.draw.circle(
+                    screen,
+                    (160, 160, 160),
+                    (int(px), int(py)),
+                    max(6, int(8 * SCALE)),
+                    1
+                )
+                s += spacing_px
