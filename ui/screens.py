@@ -49,7 +49,7 @@ def instructions_screen():
 
 def start_screen():
     pygame.mixer.music.load("assets\\music\\Concern Pt.2 Patricks Soul.mp3")
-    pygame.mixer.music.set_volume(0.5)
+    pygame.mixer.music.set_volume(1)
     pygame.mixer.music.play(-1)
 
     selecting = True
