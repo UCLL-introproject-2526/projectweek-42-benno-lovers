@@ -28,10 +28,15 @@ _level_paths_base = {
 
     # Map 2 — slingerpad
     2: [
-        (-50, 300), (150, 300), (150, 100),
-        (650, 100), (650, 500), (300, 500),
-        (300, 250), (550, 250), (550, 550)
+    (-50, 320),      # start links buiten beeld
+    (80, 320),      # gang 1 in
+    (80, 210),      # omhoog tussen banken
+    (750, 210),      # lange horizontale gang rechts
+    (750, 380),      # omlaag langs banken
+    (400, 380),      # terug naar links
+    (400, 150)        # einde bij desk
     ],
+
 
     # Map 3 — multi-lane
     31: [
@@ -68,7 +73,7 @@ level_paths = {
 
 level_base = {
     1: sp((393, 206)),
-    2: sp((550, 550)),
+    2: sp((400, 150)),
     3: sp((560, 550)),
     4: sp((710, 133)),
 
@@ -83,6 +88,6 @@ level_wave_map = {
 
 level_backgrounds = {
     1: "assets/images/BG_Restaurant.png",
+    2: "assets/images/BG_Aula.png",
     4: "assets/images/BG_Classroom.png"
-
 }
