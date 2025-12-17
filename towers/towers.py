@@ -137,7 +137,7 @@ class Tower(TowerBase):
         super().__init__(x, y, TOWER_COST, TOWER_COLOR)
         self.range = int(150 * SCALE)
         self.fire_rate = 30
-        self.damage = 25
+        self.damage = 15
 
         self.anim_frames = TURRET_FRAMES
         self.anim_index = 0.0
@@ -158,7 +158,7 @@ class SniperTower(Tower):
     def __init__(self, x, y):
         super().__init__(x, y)
         self.range = int(350 * SCALE)
-        self.damage = 50
+        self.damage = 75
         self.fire_rate = 90
         self.base_cost = SNIPER_TOWER_COST
         self.total_value = SNIPER_TOWER_COST
