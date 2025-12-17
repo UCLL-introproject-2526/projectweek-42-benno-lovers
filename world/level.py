@@ -212,7 +212,7 @@ def run_level(level: Level):
                     # ------------------ PLACE ON RELEASE ------------------
                     if placing_preview:
                         valid = (
-                            not is_on_any_path(level, mx, my)
+                            not is_on_any_path(level.level, mx, my)
                             and not too_close_to_tower(towers, mx, my)
                         )
 
