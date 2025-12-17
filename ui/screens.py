@@ -54,7 +54,7 @@ def start_screen():
     selecting = True
     while selecting:
         screen.fill(BG_COLOR)
-        title = BIG_FONT.render("Tower Defence", True, TEXT_COLOR)
+        title = BIG_FONT.render("Benno's animal siege", True, TEXT_COLOR)
         screen.blit(title, (WIDTH // 2 - title.get_width() // 2, int(0.10 * HEIGHT)))
 
         mx, my = pygame.mouse.get_pos()
