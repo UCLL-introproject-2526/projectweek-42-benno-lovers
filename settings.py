@@ -51,7 +51,7 @@ sx = WIDTH / BASE_W
 sy = HEIGHT / BASE_H
 SCALE = min(sx, sy)
 
-PATH_WIDTH = max(22, int(40 * SCALE))
+PATH_WIDTH = max(22, int(30 * SCALE))
 
 # ================== TARGETING ==================
 TARGET_FIRST = "FIRST"

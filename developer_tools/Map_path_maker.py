@@ -9,7 +9,7 @@ import pygame
 GAME_WIDTH, GAME_HEIGHT = 800, 600
 LINE_COLOR = (200, 180, 50)
 LINE_WIDTH = 20
-BG_IMAGE_PATH = "assets/images/BG_Classroom.png"
+BG_IMAGE_PATH = "./assets/images/BG_Restaurant.png"
 
 # ---- Init Pygame ----
 pygame.init()

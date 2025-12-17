@@ -7,11 +7,21 @@ def hp_bar(x, y, hp, max_hp, w, h=6):
     pygame.draw.rect(screen, (255, 0, 0), (x - w//2, y, w, h))
     pygame.draw.rect(screen, (0, 255, 0), (x - w//2, y, int(w * ratio), h))
 
-def draw_path(surface, path, width):
+def draw_path(surface, path, width, alpha=120):
+    # Maak tijdelijke surface met alpha
+    temp = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+
+    color = (*PATH_COLOR, alpha)  # voeg alpha toe
+
     for i in range(len(path) - 1):
-        pygame.draw.line(surface, PATH_COLOR, path[i], path[i + 1], width)
-        pygame.draw.circle(surface, PATH_COLOR, path[i], width // 2)
-    pygame.draw.circle(surface, PATH_COLOR, path[-1], width // 2)
+        pygame.draw.line(temp, color, path[i], path[i + 1], width)
+        pygame.draw.circle(temp, color, path[i], width // 2)
+
+    pygame.draw.circle(temp, color, path[-1], width // 2)
+
+    # Blit naar main surface
+    surface.blit(temp, (0, 0))
+
 
 # ================== PATH PREVIEW (cirkels volgen exact enemy route) ==================
 # Dit tekent een "ghost train" van cirkels die het pad volgen.

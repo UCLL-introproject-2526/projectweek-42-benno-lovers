@@ -11,9 +11,19 @@ def spath(path):
 _level_paths_base = {
     # Map 1 — klassiek
     1: [
-        (-50, 550), (50, 550), (50, 200), (200, 150),
-        (300, 300), (600, 300), (600, 100),
-        (450, 100), (450, 550)
+    (401, 599), #BEGIN
+    (401, 514), #eeste hoek
+    (514, 514), #tweede hoek
+    (516, 401),
+    (510, 391),
+    (293, 391),
+    (293, 283),
+    (293, 277),
+    (72, 277),
+    (72, 162),
+    (399, 154),
+    (399, 206),
+    (393, 206)
     ],
 
     # Map 2 — slingerpad
@@ -44,6 +54,8 @@ _level_paths_base = {
         (710, 133)
     ],
 
+
+
 }
 
 level_paths = {
@@ -51,22 +63,26 @@ level_paths = {
     2: [spath(_level_paths_base[2])],
     3: [spath(_level_paths_base[31]), spath(_level_paths_base[32])],
     4: [spath(_level_paths_base[3])],
+
 }
 
 level_base = {
-    1: sp((450, 550)),
+    1: sp((393, 206)),
     2: sp((550, 550)),
     3: sp((560, 550)),
-    4: sp((710, 133))
+    4: sp((710, 133)),
+
 }
 
 level_wave_map = {
     1: 5,
     2: 10,
     3: 14,
-    4: 5
+    4: 5,
 }
 
 level_backgrounds = {
-    4: "assets/images/BG_Classroom.png",
+    1: "assets/images/BG_Restaurant.png",
+    4: "assets/images/BG_Classroom.png"
+
 }
