@@ -6,7 +6,7 @@ class Base:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.max_hp = 220
+        self.max_hp = 100
         self.hp = self.max_hp
 
     def take_damage(self, dmg):

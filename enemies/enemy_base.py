@@ -15,7 +15,7 @@ class Enemy:
 
         if boss:
             self.max_hp = 4000
-            self.damage = 60
+            self.damage = 2999
             self.reward_money = 250
             self.reward_score = 250
             self.color = BOSS_COLOR
