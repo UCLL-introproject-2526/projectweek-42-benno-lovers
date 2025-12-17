@@ -55,7 +55,7 @@ def start_screen():
         screen.blit(title, (WIDTH // 2 - title.get_width() // 2, int(0.10 * HEIGHT)))
 
         mx, my = pygame.mouse.get_pos()
-        entries = ["Level 1 - Resaurant", "Level 2 - Aula", "Level 3","Level 4 - Classroom", "Instructies"]
+        entries = ["Level 1 - Restaurant", "Level 2 - Aula", "Level 3","Level 4 - Classroom", "Instructies"]
         rects = []
         y0 = int(0.36 * HEIGHT)
         step = int(0.11 * HEIGHT)
