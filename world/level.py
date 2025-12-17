@@ -34,7 +34,6 @@ from settings import (
 
 class Level:
     def __init__(self, level_id):
-        # Achtergrond instellen via dict
         bg_path = level_backgrounds.get(level_id)
         if bg_path:
             self.bg_image = pygame.image.load(bg_path).convert()
@@ -43,7 +42,6 @@ class Level:
             self.bg_image = None
 
         self.level = level_id
-
         self.paths = level_paths[level_id]
         self.base = Base(*level_base[level_id])
 
@@ -52,17 +50,14 @@ class Level:
 
         self.enemies = []
         self.towers = []
-
         self.finished = False
 
     def update(self, dt):
         for enemy in self.enemies[:]:
             enemy.update(dt)
-
             if enemy.reached_base:
                 self.base.take_damage(enemy.damage)
                 self.enemies.remove(enemy)
-
         if self.base.is_destroyed():
             self.finished = True
 
@@ -74,34 +69,24 @@ class Level:
         return True
 
     def draw(self, surface):
-        """Tekent het volledige level: achtergrond, paths, towers, enemies en base."""
-
-        # --- Achtergrond ---
-        if hasattr(self, "bg_image") and self.bg_image:
+        if self.bg_image:
             surface.blit(self.bg_image, (0, 0))
         else:
-            surface.fill(BG_COLOR)  # fallback kleur
+            surface.fill(BG_COLOR)
 
-        # --- Paths ---
         for path in self.paths:
             draw_path(surface, path, PATH_WIDTH)
 
-        # --- Towers ---
         for tower in self.towers:
             if hasattr(tower, "draw_base"):
                 tower.draw_base(self.enemies)
             else:
                 tower.draw(surface)
 
-        # --- Enemies ---
         for enemy in self.enemies:
             enemy.draw(surface)
 
-        # --- Base ---
-        # self.base.draw(surface)
 
-
-# ================== LEVEL LOOP ==================
 def run_level(level: Level):
     paths = level_paths[level.level]
     base = Base(*level_base[level.level])
@@ -111,32 +96,32 @@ def run_level(level: Level):
     bullets = []
 
     # ------------------ BALANCE CONFIG ------------------
-    # Build phase + level 1 wave 1 moet haalbaar zijn
+    # Idee:
+    # - wave 1 haalbaar
+    # - waves langer (meer enemies per wave)
+    # - ramp na wave 4 (sneller scaling + meer enemies)
     BALANCE = {
-        # LEVEL 1: tutorial-easy + trage start
         1: dict(
-            start_money=260,        # genoeg om meteen te bouwen
-            start_enemies=3,        # wave 1 klein
-            per_wave_add=1,         # langzaam omhoog
-            base_spawn_sec=1.60,    # spawnt traag
-            inter_wave_sec=3.2,     # ademruimte
-            hp_scale=0.08,          # zachte scaling
-            dmg_scale=0.04,
-            spd_scale=0.006,
-            level_boost=0.00
+            start_money=220,
+            start_enemies=5,
+            base_spawn_sec=1.30,     # niet super snel
+            inter_wave_sec=2.2,
+            hp_scale=0.11,
+            dmg_scale=0.06,
+            spd_scale=0.010,
+            level_boost=0.04
         ),
-        2: dict(start_money=210, start_enemies=5, per_wave_add=1, base_spawn_sec=1.20, inter_wave_sec=2.8,
-                hp_scale=0.11, dmg_scale=0.06, spd_scale=0.010, level_boost=0.05),
-        3: dict(start_money=230, start_enemies=6, per_wave_add=1, base_spawn_sec=1.10, inter_wave_sec=2.6,
-                hp_scale=0.12, dmg_scale=0.07, spd_scale=0.011, level_boost=0.06),
-        4: dict(start_money=210, start_enemies=5, per_wave_add=1, base_spawn_sec=1.15, inter_wave_sec=2.7,
-                hp_scale=0.11, dmg_scale=0.06, spd_scale=0.010, level_boost=0.05),
+        2: dict(start_money=210, start_enemies=6, base_spawn_sec=1.25, inter_wave_sec=2.1,
+                hp_scale=0.12, dmg_scale=0.065, spd_scale=0.011, level_boost=0.05),
+        3: dict(start_money=220, start_enemies=7, base_spawn_sec=1.20, inter_wave_sec=2.0,
+                hp_scale=0.13, dmg_scale=0.070, spd_scale=0.012, level_boost=0.06),
+        4: dict(start_money=210, start_enemies=7, base_spawn_sec=1.22, inter_wave_sec=2.0,
+                hp_scale=0.13, dmg_scale=0.070, spd_scale=0.012, level_boost=0.06),
     }
-    cfg = BALANCE.get(
-        level.level,
-        dict(start_money=200, start_enemies=5, per_wave_add=1, base_spawn_sec=1.20, inter_wave_sec=2.8,
-             hp_scale=0.11, dmg_scale=0.06, spd_scale=0.010, level_boost=0.05)
-    )
+    cfg = BALANCE.get(level.level, dict(
+        start_money=210, start_enemies=6, base_spawn_sec=1.25, inter_wave_sec=2.1,
+        hp_scale=0.12, dmg_scale=0.065, spd_scale=0.011, level_boost=0.05
+    ))
 
     money = 99999999 if DEV_INFINITE_MONEY else cfg["start_money"]
     score = 0
@@ -149,17 +134,16 @@ def run_level(level: Level):
     spawn_timer = 0
 
     base_spawn_interval = int(cfg["base_spawn_sec"] * FPS)
-    min_spawn_interval = int(0.80 * FPS)  # cap zodat het nooit belachelijk snel wordt
+    min_spawn_interval = int(0.75 * FPS)  # spawn wordt sneller later, maar niet belachelijk
 
     enemies_spawned = 0
     enemies_per_wave = cfg["start_enemies"]
-    per_wave_add = cfg["per_wave_add"]
 
     inter_wave_pause = int(cfg["inter_wave_sec"] * FPS)
 
-    # ✅ Build phase vóór wave 1
-    between_waves = int(4.0 * FPS)
-    start_overlay("Build phase: place towers!", (180, 220, 255), 2.0)
+    # ✅ korte build phase (genoeg om 1–2 towers te zetten)
+    between_waves = int(2.5 * FPS)
+    start_overlay("Build phase: place towers!", (180, 220, 255), 1.4)
 
     hp_scale = cfg["hp_scale"]
     dmg_scale = cfg["dmg_scale"]
@@ -172,17 +156,15 @@ def run_level(level: Level):
 
     boss_spawned = False
 
-    # selection + merge
     selected = None
     dragged = None
     drag_origin = None
 
-    # placement preview state (CLICK-HOLD)
     placing_preview = False
     placing_type = None
     placing_cost = 0
 
-    tick = 0  # voor moving path preview
+    tick = 0
 
     running = True
     while running:
@@ -201,20 +183,17 @@ def run_level(level: Level):
                 return None
 
             if event.type == pygame.KEYDOWN and not game_over:
-                # sell
                 if event.key == pygame.K_x and selected and selected in towers:
                     if not DEV_INFINITE_MONEY:
                         money += int(selected.total_value * SELL_REFUND)
                     towers.remove(selected)
                     selected = None
 
-                # targeting
                 if event.key == pygame.K_t and selected and selected in towers:
                     selected.cycle_target_mode()
 
             if event.type == pygame.MOUSEBUTTONDOWN and not game_over:
                 if event.button == 1:
-                    # klik op tower = drag voor merge
                     t = tower_at_pos(towers, mx, my)
                     if t:
                         selected = t
@@ -225,7 +204,6 @@ def run_level(level: Level):
                         placing_type = None
                         placing_cost = 0
                     else:
-                        # placement preview start
                         selected = None
 
                         pressed = pygame.key.get_pressed()
@@ -256,7 +234,6 @@ def run_level(level: Level):
 
             if event.type == pygame.MOUSEBUTTONUP and not game_over:
                 if event.button == 1:
-                    # ------------------ PLACE ON RELEASE ------------------
                     if placing_preview:
                         valid = (
                             not is_on_any_path(level, mx, my)
@@ -280,7 +257,6 @@ def run_level(level: Level):
                         placing_type = None
                         placing_cost = 0
 
-                    # ------------------ MERGE ON RELEASE ------------------
                     if dragged:
                         merged = False
                         for t in towers:
@@ -303,7 +279,6 @@ def run_level(level: Level):
                         dragged = None
                         drag_origin = None
 
-        # drag follow mouse (visual only)
         if dragged and not game_over:
             dragged.x, dragged.y = mx, my
 
@@ -314,56 +289,70 @@ def run_level(level: Level):
             else:
                 if not wave_started:
                     boss_spawned = False
-                    start_overlay(f"Wave {wave} starting!", (255, 255, 0), 1.2)
+                    start_overlay(f"Wave {wave} starting!", (255, 255, 0), 1.1)
                     wave_started = True
 
-                # langzaam sneller per wave, maar capped
-                spawn_interval = max(min_spawn_interval, int(base_spawn_interval - (wave - 1) * 0.03 * FPS))
-
+                # spawn wordt sneller per wave (maar waves worden vooral langer door meer enemies)
+                spawn_interval = max(min_spawn_interval, int(base_spawn_interval - (wave - 1) * 0.04 * FPS))
                 spawn_timer += 1
 
                 if enemies_spawned < enemies_per_wave and spawn_timer >= spawn_interval:
                     spawn_timer = 0
                     path_to_use = paths[(wave + enemies_spawned) % len(paths)]
 
-                    # ✅ eerlijk: wave 1–2 enkel basic enemies
-                    if wave <= 2:
+                    # ✅ difficulty ramp: early eerlijk, later zwaarder
+                    if wave == 1:
                         e = Enemy(path_to_use, strong=False)
+                    elif wave <= 2:
+                        e = FastEnemy(path_to_use) if random.random() < 0.12 else Enemy(path_to_use, strong=False)
                     elif wave <= 4:
-                        e = FastEnemy(path_to_use) if random.random() < 0.20 else Enemy(path_to_use, strong=False)
-                    else:
                         r = random.random()
                         if r < 0.18:
                             e = FastEnemy(path_to_use)
-                        elif r < 0.78:
+                        elif r < 0.88:
+                            e = Enemy(path_to_use, strong=False)
+                        else:
+                            e = Enemy(path_to_use, strong=True)
+                    else:
+                        r = random.random()
+                        if r < 0.22:
+                            e = FastEnemy(path_to_use)
+                        elif r < 0.72:
                             e = Enemy(path_to_use, strong=False)
                         else:
                             e = Enemy(path_to_use, strong=True)
 
-                    # ✅ zachtere scaling
+                    # ✅ ramp na wave 4: extra scaling erbij
+                    ramp = max(0, wave - 4)
+                    ramp_hp = 0.015 * ramp
+                    ramp_dmg = 0.010 * ramp
+                    ramp_spd = 0.003 * ramp
+
                     level_boost = (level.level - 1) * level_boost_factor
-                    e.max_hp = int(e.max_hp * (1.0 + hp_scale * (wave - 1) + level_boost))
+
+                    e.max_hp = int(e.max_hp * (1.0 + (hp_scale + ramp_hp) * (wave - 1) + level_boost))
                     e.hp = e.max_hp
-                    e.damage = int(e.damage * (1.0 + dmg_scale * (wave - 1) + level_boost))
-                    e.base_speed = e.base_speed * (1.0 + spd_scale * (wave - 1))
+                    e.damage = int(e.damage * (1.0 + (dmg_scale + ramp_dmg) * (wave - 1) + level_boost))
+                    e.base_speed = e.base_speed * (1.0 + (spd_scale + ramp_spd) * (wave - 1))
 
                     enemies.append(e)
                     enemies_spawned += 1
 
-                # boss wave (blijft sterker, maar geen absurde spike)
+                # boss wave (blijft stevig)
                 if is_boss_wave(wave) and enemies_spawned >= enemies_per_wave and not boss_spawned:
-                    if spawn_timer >= int(1.1 * FPS):
+                    if spawn_timer >= int(1.0 * FPS):
                         path_to_use = paths[wave % len(paths)]
                         b = Enemy(path_to_use, boss=True)
 
-                        level_boost = (level.level - 1) * (level_boost_factor + 0.03)
-                        b.max_hp = int(b.max_hp * (1.0 + (hp_scale + 0.10) * (wave - 1) + level_boost))
+                        ramp = max(0, wave - 4)
+                        level_boost = (level.level - 1) * (level_boost_factor + 0.05)
+
+                        b.max_hp = int(b.max_hp * (1.0 + (hp_scale + 0.12 + 0.02 * ramp) * (wave - 1) + level_boost))
                         b.hp = b.max_hp
-                        b.damage = int(b.damage * (1.0 + (dmg_scale + 0.03) * (wave - 1) + level_boost))
-                        b.base_speed = b.base_speed * (1.0 + (spd_scale + 0.004) * (wave - 1))
+                        b.damage = int(b.damage * (1.0 + (dmg_scale + 0.05 + 0.015 * ramp) * (wave - 1) + level_boost))
+                        b.base_speed = b.base_speed * (1.0 + (spd_scale + 0.006 + 0.002 * ramp) * (wave - 1))
 
                         enemies.append(b)
-
                         boss_spawned = True
                         spawn_timer = 0
 
@@ -371,7 +360,18 @@ def run_level(level: Level):
                 if enemies_spawned >= enemies_per_wave and len(enemies) == 0 and (not is_boss_wave(wave) or boss_spawned):
                     wave += 1
                     enemies_spawned = 0
-                    enemies_per_wave += per_wave_add
+
+                    # ✅ waves langer + ramp: meer enemies per wave naarmate je verder gaat
+                    # - early: +2
+                    # - vanaf wave 4: +3
+                    # - vanaf wave 7: +4
+                    if wave <= 4:
+                        enemies_per_wave += 2
+                    elif wave <= 7:
+                        enemies_per_wave += 3
+                    else:
+                        enemies_per_wave += 4
+
                     wave_started = False
                     between_waves = inter_wave_pause
                     spawn_timer = 0
