@@ -107,6 +107,11 @@ class Level:
 
 # ================== LEVEL LOOP ==================
 def run_level(level: Level):
+        # --- LEVEL MUZIEK ---
+    pygame.mixer.music.load("assets\\music\\SpotiDown.App - Mother North - Satyricon.mp3")
+    pygame.mixer.music.set_volume(1)
+    pygame.mixer.music.play(-1)
+
     paths = level_paths[level.level]
     base = Base(*level_base[level.level])
 
@@ -157,8 +162,10 @@ def run_level(level: Level):
         # ------------------ EVENTS ------------------
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                pygame.mixer.music.stop()
                 return None
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                pygame.mixer.music.stop()
                 return None
 
             if event.type == pygame.KEYDOWN and not game_over:
@@ -327,6 +334,7 @@ def run_level(level: Level):
                             screen.fill(BG_COLOR)
                             draw_overlay()
                             pygame.display.flip()
+                        pygame.mixer.music.stop()
                         return ("MENU", None)
 
         # ------------------ ENEMIES UPDATE ------------------
