@@ -2,7 +2,7 @@ import math
 import pygame
 from projectiles.bullet import Bullet
 from utils.draw import hp_bar
-from settings import TOWER_COLOR, TOWER_COST, SNIPER_TOWER_COST, SLOW_TOWER_COST, POISON_TOWER_COST, SCALE, MAX_TOWER_LEVEL, TARGET_FIRST, TARGET_MODES, SMALL_FONT, TARGET_STRONG, TEXT_COLOR, screen
+from settings import TOWER_COLOR, TOWER_COST, SNIPER_TOWER_COST, SLOW_TOWER_COST, SCALE, MAX_TOWER_LEVEL, TARGET_FIRST, TARGET_MODES, SMALL_FONT, TARGET_STRONG, TEXT_COLOR, screen
 
 
 # ================== TURRET IDLE SPRITE ==================
@@ -184,28 +184,4 @@ class SlowTower(Tower):
             return
 
         bullets.append(Bullet(self.x, self.y, target, self.damage, effect=("slow", 0.5, 120)))
-        self.cooldown = self.fire_rate
-
-
-class PoisonTower(Tower):
-    def __init__(self, x, y):
-        super().__init__(x, y)
-        self.range = int(160 * SCALE)
-        self.damage = 5
-        self.fire_rate = 45
-        self.base_cost = POISON_TOWER_COST
-        self.total_value = POISON_TOWER_COST
-
-    def shoot(self, enemies, bullets):
-        if self.dragging:
-            return
-        if self.cooldown > 0:
-            self.cooldown -= 1
-            return
-
-        target = self.choose_target(enemies)
-        if not target:
-            return
-
-        bullets.append(Bullet(self.x, self.y, target, self.damage, effect=("poison", 2, 180)))
         self.cooldown = self.fire_rate

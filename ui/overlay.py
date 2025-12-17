@@ -3,8 +3,8 @@
 
 
 import pygame
-from settings import screen, BIG_FONT, FPS, SCALE, SNIPER_COLOR, SLOW_COLOR, POISON_COLOR, TOWER_COLOR
-from towers.towers import SniperTower, SlowTower, PoisonTower
+from settings import screen, BIG_FONT, FPS, SCALE, SNIPER_COLOR, SLOW_COLOR, TOWER_COLOR
+from towers.towers import SniperTower, SlowTower
 # overlay = {"text": str, "color": (r,g,b), "frames": int}
 overlay = None
 
@@ -38,9 +38,6 @@ def preview_stats_for_type(ttype):
         return SNIPER_COLOR, int(350 * SCALE)
     if ttype == "SLOW":
         return SLOW_COLOR, int(170 * SCALE)
-    if ttype == "POISON":
-        return POISON_COLOR, int(160 * SCALE)
-    return TOWER_COLOR, int(150 * SCALE)
 
 def same_tower_type(a, b):
     return type(a) is type(b)
@@ -48,5 +45,4 @@ def same_tower_type(a, b):
 def tower_type_name(t):
     if isinstance(t, SniperTower): return "SNIPER"
     if isinstance(t, SlowTower): return "SLOW"
-    if isinstance(t, PoisonTower): return "POISON"
     return "NORMAL"
