@@ -2,6 +2,7 @@ import pygame
 from ui.screens import start_screen
 from world.level import Level, run_level
 pygame.init()
+pygame.mixer.init()
 
 while True:
     level_number = start_screen()
