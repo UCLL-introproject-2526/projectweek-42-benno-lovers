@@ -92,7 +92,7 @@ def run_level(level: Level):
     base = Base(*level_base[level.level])
 
     pygame.mixer.music.load("assets\\music\\SpotiDown.App - Mother North - Satyricon.mp3")
-    pygame.mixer.music.set_volume(1)
+    pygame.mixer.music.set_volume(0.5)
     pygame.mixer.music.play(-1)
 
     enemies = []
@@ -240,7 +240,7 @@ def run_level(level: Level):
                 if event.button == 1:
                     if placing_preview:
                         valid = (
-                            not is_on_any_path(level, mx, my)
+                            not is_on_any_path(level.level, mx, my)
                             and not too_close_to_tower(towers, mx, my)
                         )
 
