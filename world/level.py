@@ -301,7 +301,7 @@ def run_level(level: Level):
                         path_to_use = paths[wave % len(paths)]
                         b = Enemy(path_to_use, boss=True)
 
-                        level_boost = (level - 1) * 0.25
+                        level_boost = (level.level - 1) * 0.25
                         b.max_hp = int(b.max_hp * (1.0 + 0.35 * (wave - 1) + level_boost))
                         b.hp = b.max_hp
                         b.damage = int(b.damage * (1.0 + 0.10 * (wave - 1) + level_boost))
