@@ -4,6 +4,17 @@ from projectiles.bullet import Bullet
 from utils.draw import hp_bar
 from settings import TOWER_COLOR, TOWER_COST, SNIPER_TOWER_COST, SLOW_TOWER_COST, POISON_TOWER_COST, SCALE, MAX_TOWER_LEVEL, TARGET_FIRST, TARGET_MODES, SMALL_FONT, TARGET_STRONG, TEXT_COLOR, screen
 
+SHOOT_SOUND = pygame.mixer.Sound("assets\\sounds\\SHOTGUN_FINAL.mp3")
+SHOOT_SOUND.set_volume(1)
+
+SNIPER_SOUND = pygame.mixer.Sound("assets\\sounds\\SNIPER_SCHOT_ FINAL.mp3")
+SNIPER_SOUND.set_volume(1)
+
+SLOW_SHOOT_SOUND = pygame.mixer.Sound("assets\\sounds\\EXPLOSIE_FINAL.mp3")
+SLOW_SHOOT_SOUND.set_volume(1)
+
+POISON_SHOOT_SOUND = pygame.mixer.Sound("assets\\sounds\\SHOTGUN_FINAL.mp3")
+POISON_SHOOT_SOUND.set_volume(1)
 
 # ================== TURRET IDLE SPRITE ==================
 TURRET_IDLE_RAW = pygame.image.load(r"assets/images/TurretIdle.png").convert_alpha()
@@ -130,6 +141,7 @@ class TowerBase:
             return
 
         bullets.append(Bullet(self.x, self.y, target, self.damage))
+        SHOOT_SOUND.play()
         self.cooldown = self.fire_rate
 # Basis Tower class waar alle specifieke towers van erven
 class Tower(TowerBase):
@@ -162,6 +174,22 @@ class SniperTower(Tower):
         self.fire_rate = 90
         self.base_cost = SNIPER_TOWER_COST
         self.total_value = SNIPER_TOWER_COST
+    
+    def shoot(self, enemies, bullets):
+        if self.dragging:
+            return
+        if self.cooldown > 0:
+            self.cooldown -= 1
+            return
+
+        target = self.choose_target(enemies)
+        if not target:
+            return
+
+        bullets.append(Bullet(self.x, self.y, target, self.damage))
+        SNIPER_SOUND.play()
+        self.cooldown = self.fire_rate
+
 
 class SlowTower(Tower):
     def __init__(self, x, y):
@@ -184,6 +212,7 @@ class SlowTower(Tower):
             return
 
         bullets.append(Bullet(self.x, self.y, target, self.damage, effect=("slow", 0.5, 120)))
+        SLOW_SHOOT_SOUND.play()
         self.cooldown = self.fire_rate
 
 
@@ -208,4 +237,5 @@ class PoisonTower(Tower):
             return
 
         bullets.append(Bullet(self.x, self.y, target, self.damage, effect=("poison", 2, 180)))
+        POISON_SHOOT_SOUND.play()
         self.cooldown = self.fire_rate
