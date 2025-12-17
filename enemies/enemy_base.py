@@ -21,11 +21,9 @@ class Enemy:
             self.color = BOSS_COLOR
             self.radius = max(18, int(26 * SCALE))
             self.is_boss = True
-
             self.base_speed = self.speed * 0.3
 
             self.base_speed = self.speed * 0.1
-
         else:
             self.max_hp = 500 if strong else 155
             self.damage = 25 if strong else 10
@@ -41,6 +39,10 @@ class Enemy:
         self.slow_ticks = 0
         self.slow_factor = 1.0
 
+        # poison
+        self.poison_ticks = 0
+        self.poison_dps = 0.0
+
         # for smoother FIRST targeting: fraction progress on current segment
         self.segment_frac = 0.0
 
@@ -52,6 +54,9 @@ class Enemy:
             self.slow_factor = factor
         self.slow_ticks = max(self.slow_ticks, ticks)
 
+    def apply_poison(self, dps, ticks):
+        self.poison_dps = max(self.poison_dps, dps)
+        self.poison_ticks = max(self.poison_ticks, ticks)
 
     def update_effects(self):
         # slow
@@ -62,10 +67,23 @@ class Enemy:
             self.slow_factor = 1.0
             self.speed = self.base_speed
 
+        # poison (FIX: poison kan nu écht killen + stopt correct)
+        if self.poison_ticks > 0:
+            self.poison_ticks -= 1
+            self.hp -= (self.poison_dps / FPS)
+            if self.hp <= 0:
+                self.hp = 0
+                return True  # <- DIED FROM POISON
+        else:
+            self.poison_dps = 0.0
+
         return False
 
     def move(self):
-        
+        died_from_poison = self.update_effects()
+        if died_from_poison:
+            return "DEAD"  # speciale status voor de loop
+
         if self.i >= len(self.path):
             return True  # reached end
 
