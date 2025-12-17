@@ -24,13 +24,6 @@ from ui.hud import draw_hud
 from ui.overlay import draw_overlay, start_overlay, preview_stats_for_type, tower_type_name
 
 
-# Settings / Constants
-from settings import (
-    DEV_INFINITE_MONEY, FPS, BG_COLOR, clock, screen,
-    SELL_REFUND, SNIPER_TOWER_COST, SLOW_TOWER_COST, POISON_TOWER_COST,
-    TOWER_COST, PATH_WIDTH, SCALE, WIDTH, HEIGHT,
-    SMALL_FONT, FONT, BIG_FONT
-)
 
 # Settings / Constants
 from settings import (
@@ -71,7 +64,7 @@ class Level:
         if self.base.is_destroyed():
             self.finished = True
     def can_place_tower(self, x, y):
-        if is_on_any_path(self.level, x, y, level_paths):
+        if is_on_any_path(self, x, y):
             return False
         if too_close_to_tower(self.towers, x, y):
             return False
@@ -107,11 +100,6 @@ class Level:
 
 # ================== LEVEL LOOP ==================
 def run_level(level: Level):
-        # --- LEVEL MUZIEK ---
-    pygame.mixer.music.load("assets\\music\\SpotiDown.App - Mother North - Satyricon.mp3")
-    pygame.mixer.music.set_volume(1)
-    pygame.mixer.music.play(-1)
-
     paths = level_paths[level.level]
     base = Base(*level_base[level.level])
 
@@ -162,10 +150,8 @@ def run_level(level: Level):
         # ------------------ EVENTS ------------------
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.mixer.music.stop()
                 return None
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                pygame.mixer.music.stop()
                 return None
 
             if event.type == pygame.KEYDOWN and not game_over:
@@ -196,16 +182,24 @@ def run_level(level: Level):
                         # placement preview start
                         selected = None
 
-                        placing_type = selected
+                        pressed = pygame.key.get_pressed()
+                        if pressed[pygame.K_s]:
+                            placing_type = "SNIPER"
+                        elif pressed[pygame.K_a]:
+                            placing_type = "SLOW"
+                        elif pressed[pygame.K_d]:
+                            placing_type = "POISON"
+                        else:
+                            placing_type = "NORMAL"
 
                         if placing_type == "SNIPER":
-                         placing_cost = SNIPER_TOWER_COST
+                            placing_cost = SNIPER_TOWER_COST
                         elif placing_type == "SLOW":
-                         placing_cost = SLOW_TOWER_COST
+                            placing_cost = SLOW_TOWER_COST
                         elif placing_type == "POISON":
-                         placing_cost = POISON_TOWER_COST
+                            placing_cost = POISON_TOWER_COST
                         else:
-                         placing_cost = TOWER_COST
+                            placing_cost = TOWER_COST
 
                         if DEV_INFINITE_MONEY or money >= placing_cost:
                             placing_preview = True
@@ -328,13 +322,12 @@ def run_level(level: Level):
                     spawn_timer = 0
 
                     if wave > max_waves:
-                        start_overlay(f"Level {level} Completed!", (0, 255, 0), 2.0)
+                        start_overlay(f"Level {level.level} Completed!", (0, 255, 0), 2.0)
                         for _ in range(int(1.0 * FPS)):
                             clock.tick(FPS)
                             screen.fill(BG_COLOR)
                             draw_overlay()
                             pygame.display.flip()
-                        pygame.mixer.music.stop()
                         return ("MENU", None)
 
         # ------------------ ENEMIES UPDATE ------------------

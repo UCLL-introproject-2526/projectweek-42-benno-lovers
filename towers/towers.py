@@ -2,11 +2,11 @@ import math
 import pygame
 from projectiles.bullet import Bullet
 from utils.draw import hp_bar
-from settings import TOWER_COLOR, TOWER_COST, SCALE, MAX_TOWER_LEVEL, TARGET_FIRST, TARGET_MODES, SMALL_FONT, TARGET_STRONG, TEXT_COLOR, screen
+from settings import TOWER_COLOR, TOWER_COST, SNIPER_TOWER_COST, SLOW_TOWER_COST, POISON_TOWER_COST, SCALE, MAX_TOWER_LEVEL, TARGET_FIRST, TARGET_MODES, SMALL_FONT, TARGET_STRONG, TEXT_COLOR, screen
 
 
 # ================== TURRET IDLE SPRITE ==================
-TURRET_IDLE_RAW = pygame.image.load("assets\images\TurretIdle.png").convert_alpha()
+TURRET_IDLE_RAW = pygame.image.load(r"assets/images/TurretIdle.png").convert_alpha()
 
 TURRET_FRAME_W = 42
 TURRET_FRAME_H = TURRET_IDLE_RAW.get_height()
@@ -19,7 +19,7 @@ for i in range(5):  # 210px / 42px = 5 frames
     TURRET_FRAMES.append(frame)
 
 # ================== TURRET FIRING SPRITE ==================
-TURRET_FIRING_RAW = pygame.image.load(r"assets\images\TurretFiring.png").convert_alpha()
+TURRET_FIRING_RAW = pygame.image.load(r"assets/images/TurretFiring.png").convert_alpha()
 FIRING_COLS = 2
 FIRING_ROWS = 1
 FRAME_W = TURRET_FIRING_RAW.get_width() // FIRING_COLS
@@ -153,54 +153,59 @@ class Tower(TowerBase):
         self.fire_rate = max(7, self.fire_rate - 4)
         return True
 
-# Specifieke tower types (kun je makkelijk uitbreiden)
-class FastTower(Tower):
-    def __init__(self, x, y):
-        super().__init__(x, y, range_radius=100, damage=5, fire_rate=2)
-
-class StrongTower(Tower):
-    def __init__(self, x, y):
-        super().__init__(x, y, range_radius=80, damage=15, fire_rate=0.5)
-
-
+# Specifieke tower types (uitbreidbaar)
 class SniperTower(Tower):
     def __init__(self, x, y):
         super().__init__(x, y)
-        self.range = 250
+        self.range = int(350 * SCALE)
         self.damage = 50
         self.fire_rate = 90
-        self.total_value = 120
+        self.base_cost = SNIPER_TOWER_COST
+        self.total_value = SNIPER_TOWER_COST
 
 class SlowTower(Tower):
     def __init__(self, x, y):
         super().__init__(x, y)
-        self.range = 120
+        self.range = int(170 * SCALE)
         self.damage = 5
         self.fire_rate = 45
-        self.total_value = 80
+        self.base_cost = SLOW_TOWER_COST
+        self.total_value = SLOW_TOWER_COST
 
     def shoot(self, enemies, bullets):
+        if self.dragging:
+            return
         if self.cooldown > 0:
             self.cooldown -= 1
             return
-        target = self.find_target(enemies)
-        if target:
-            bullets.append(Bullet(self.x, self.y, target, self.damage, effect=("slow", 0.5, 120)))
-            self.cooldown = self.fire_rate
+
+        target = self.choose_target(enemies)
+        if not target:
+            return
+
+        bullets.append(Bullet(self.x, self.y, target, self.damage, effect=("slow", 0.5, 120)))
+        self.cooldown = self.fire_rate
+
 
 class PoisonTower(Tower):
     def __init__(self, x, y):
         super().__init__(x, y)
-        self.range = 120
+        self.range = int(160 * SCALE)
         self.damage = 5
         self.fire_rate = 45
-        self.total_value = 100
+        self.base_cost = POISON_TOWER_COST
+        self.total_value = POISON_TOWER_COST
 
     def shoot(self, enemies, bullets):
+        if self.dragging:
+            return
         if self.cooldown > 0:
             self.cooldown -= 1
             return
-        target = self.find_target(enemies)
-        if target:
-            bullets.append(Bullet(self.x, self.y, target, self.damage, effect=("poison", 2, 180)))
-            self.cooldown = self.fire_rate
+
+        target = self.choose_target(enemies)
+        if not target:
+            return
+
+        bullets.append(Bullet(self.x, self.y, target, self.damage, effect=("poison", 2, 180)))
+        self.cooldown = self.fire_rate

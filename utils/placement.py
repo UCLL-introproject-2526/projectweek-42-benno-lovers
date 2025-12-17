@@ -2,7 +2,7 @@ import math
 from settings import MIN_TOWER_DISTANCE, SCALE, SNIPER_COLOR, SLOW_COLOR, POISON_COLOR, TOWER_COLOR
 from towers.towers import SniperTower, SlowTower, PoisonTower
 from .geometry import is_on_path
-from world.level import level_paths
+from world.maps import level_paths
 
 def is_on_any_path(level, x, y):
     return any(is_on_path(x, y, p) for p in level_paths[level.level])
@@ -12,13 +12,6 @@ def too_close_to_tower(towers, x, y):
         if math.hypot(t.x - x, t.y - y) < MIN_TOWER_DISTANCE:
             return True
     return False
-
-def tower_at_pos(towers, mx, my):
-    for t in reversed(towers):
-        rad = max(18, int((26 + t.level) * SCALE))
-        if math.hypot(mx - t.x, my - t.y) <= rad:
-            return t
-    return None
 
 def tower_at_pos(towers, mx, my):
     for t in reversed(towers):
