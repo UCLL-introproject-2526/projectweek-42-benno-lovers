@@ -10,7 +10,7 @@ FPS = 60
 clock = pygame.time.Clock()
 
 # DEV
-DEV_INFINITE_MONEY = True
+DEV_INFINITE_MONEY = False
 
 # CONSTANTEN
 TOWER_COST = 50
