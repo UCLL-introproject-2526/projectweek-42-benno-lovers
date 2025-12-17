@@ -19,6 +19,7 @@ def instructions_screen():
             "LMB = Normal",
             "S + LMB = Sniper",
             "A + LMB = Slow",
+            "D + LMB = Poison",
             "",
             "Loslaten = plaatsen | loslaten op pad = annuleren",
             "",

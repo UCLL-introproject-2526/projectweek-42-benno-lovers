@@ -7,7 +7,7 @@ from world.maps import level_paths, level_base, level_wave_map, level_background
 from world.base import Base
 
 # Towers
-from towers.towers import Tower, SniperTower, SlowTower
+from towers.towers import Tower, SniperTower, SlowTower, PoisonTower
 
 # Enemies
 from enemies.enemy_types import Enemy, FastEnemy
@@ -26,7 +26,7 @@ from ui.overlay import draw_overlay, start_overlay, preview_stats_for_type, towe
 # Settings / Constants
 from settings import (
     DEV_INFINITE_MONEY, FPS, BG_COLOR, clock, screen,
-    SELL_REFUND, SNIPER_TOWER_COST, SLOW_TOWER_COST,
+    SELL_REFUND, SNIPER_TOWER_COST, SLOW_TOWER_COST, POISON_TOWER_COST,
     TOWER_COST, PATH_WIDTH, SCALE, WIDTH, HEIGHT,
     SMALL_FONT, FONT, BIG_FONT
 )
@@ -215,6 +215,8 @@ def run_level(level: Level):
                             placing_type = "SNIPER"
                         elif pressed[pygame.K_a]:
                             placing_type = "SLOW"
+                        elif pressed[pygame.K_d]:
+                            placing_type = "POISON"
                         else:
                             placing_type = "NORMAL"
 
@@ -222,6 +224,8 @@ def run_level(level: Level):
                             placing_cost = SNIPER_TOWER_COST
                         elif placing_type == "SLOW":
                             placing_cost = SLOW_TOWER_COST
+                        elif placing_type == "POISON":
+                            placing_cost = POISON_TOWER_COST
                         else:
                             placing_cost = TOWER_COST
 
@@ -245,6 +249,8 @@ def run_level(level: Level):
                                 towers.append(SniperTower(mx, my))
                             elif placing_type == "SLOW":
                                 towers.append(SlowTower(mx, my))
+                            elif placing_type == "POISON":
+                                towers.append(PoisonTower(mx, my))
                             else:
                                 towers.append(Tower(mx, my))
 
@@ -416,6 +422,9 @@ def run_level(level: Level):
                     if kind == "slow":
                         _, factor, ticks = b.effect
                         b.target.apply_slow(factor, ticks)
+                    elif kind == "poison":
+                        _, dps, ticks = b.effect
+                        b.target.apply_poison(dps, ticks)
 
                 bullets.remove(b)
 
