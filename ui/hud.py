@@ -1,6 +1,6 @@
 import pygame
 from settings import WIDTH, HEIGHT, FONT, SMALL_FONT, screen
-from settings import TOWER_COST, SNIPER_TOWER_COST, SLOW_TOWER_COST, POISON_TOWER_COST
+from settings import TOWER_COST, SNIPER_TOWER_COST, SLOW_TOWER_COST
 
 
 def render_text_outline(font, text, fg=(0, 0, 0), outline=(255, 255, 255), thickness=2):
@@ -32,7 +32,7 @@ def draw_hud(money, score, base_hp, wave, max_waves):
     screen.blit(render_text_outline(FONT, f"LMB = Normal ({TOWER_COST}$)"), (rx, 10))
     screen.blit(render_text_outline(FONT, f"S + LMB = Sniper ({SNIPER_TOWER_COST}$)"), (rx, 35))
     screen.blit(render_text_outline(FONT, f"A + LMB = Slow ({SLOW_TOWER_COST}$)"), (rx, 60))
-    screen.blit(render_text_outline(FONT, f"D + LMB = Poison ({POISON_TOWER_COST}$)"), (rx, 85))
+
 
     # Onder hint
     hint = render_text_outline(

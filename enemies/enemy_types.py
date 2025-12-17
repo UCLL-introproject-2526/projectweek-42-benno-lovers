@@ -13,6 +13,3 @@ class FastEnemy(Enemy):
         self.speed = self.base_speed
         self.color = FAST_ENEMY_COLOR
         self.radius = max(8, int(10 * SCALE))
-        self.mark_bonus = 0.0
-        self.mark_ticks = 0
-
