@@ -22,11 +22,7 @@ class Enemy:
             self.radius = max(18, int(26 * SCALE))
             self.is_boss = True
             self.base_speed = self.speed * 0.3
-<<<<<<< HEAD
 
-           
-=======
->>>>>>> 194512ca4fe6c6acf58568da6978479c73b24edd
         else:
             self.max_hp = 500 if strong else 155
             self.damage = 25 if strong else 10
