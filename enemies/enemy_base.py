@@ -21,6 +21,7 @@ class Enemy:
             self.color = BOSS_COLOR
             self.radius = max(18, int(26 * SCALE))
             self.is_boss = True
+            self.base_speed = self.speed * 0.1
         else:
             self.max_hp = 300 if strong else 100
             self.damage = 25 if strong else 10
