@@ -306,8 +306,14 @@ def run_level(level: Level):
                 spawn_timer = 0
 
                 path_to_use = paths[(wave + enemies_spawned) % len(paths)]
-                e, boss_spawned = spawn_enemy_for_wave(wave, path_to_use, level.level, boss_spawned)
-
+                e, boss_spawned = spawn_enemy_for_wave(
+                wave,
+                path_to_use,
+                level.level,
+                boss_spawned,
+                enemies_spawned,
+                enemies_per_wave
+                )                
                 ramp = max(0, wave - 4)
                 ramp_hp = 0.015 * ramp
                 ramp_dmg = 0.010 * ramp
