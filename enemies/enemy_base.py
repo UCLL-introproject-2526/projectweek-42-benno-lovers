@@ -147,17 +147,17 @@ class Enemy:
     def draw(self):
         cx, cy = int(self.x), int(self.y)
 
+        # ✅ default zodat hp-bar nooit crasht als er geen sprite frames zijn
+        target_h = int(self.radius * 2.2)
+
         if self.frames:
             self.anim_index = (self.anim_index + self.anim_speed) % len(self.frames)
             frame = self.frames[int(self.anim_index)]
-
-            scale_factor = 2.2
 
             t = ENEMY_TYPES[self.enemy_type]
             scale_factor = t.get("sprite_scale", 2.2)
 
             target_h = int(self.radius * scale_factor)
-
             scale = target_h / frame.get_height()
 
             new_w = max(1, int(frame.get_width() * scale))
@@ -174,6 +174,7 @@ class Enemy:
             pygame.draw.circle(screen, self.color, (cx, cy), self.radius)
 
         bar_w = max(44, int((70 if self.is_boss else 55) * SCALE))
+
         # ---- HP BAR (boven sprite, dynamisch) ----
         sprite_half_h = target_h // 2
         hp_offset = sprite_half_h + int(6 * SCALE)
@@ -187,3 +188,73 @@ class Enemy:
             h=max(6, int(8 * SCALE))
         )
 
+
+# ======================================================
+# BENNO (special boss die lightning balls op towers schiet)
+# ======================================================
+class BennoBoss(Enemy):
+    """
+    Gebruik deze class alleen wanneer je Benno wil spawnen (level 4 wave 20).
+    Hij gebruikt het bestaande sprite-systeem door enemy_type='boss' te nemen.
+    """
+    def __init__(self, path, level_id=4):
+        super().__init__(path, enemy_type="boss", level_id=level_id)
+
+        self.is_benno = True  # handig om later in level.py te detecteren
+
+        # cooldowns (frames)
+        self._orb_cd = int(2.2 * FPS)     # start cooldown
+        self._orb_timer = int(1.0 * FPS) # eerste aanval sneller
+
+        # basis orb stats (gaan in phases mee omhoog)
+        self._orb_speed = 5.0 * SCALE
+        self._orb_damage = 1  # jij gaat towers "one-shot" doen in level.py; damage kan later nuttig zijn.
+
+    def shoot(self, towers, enemy_projectiles):
+        """
+        Wordt elke frame opgeroepen vanuit level.py.
+        towers = lijst van towers in het level
+        enemy_projectiles = lijst waar we orbs in pushen
+        """
+        if self.hp <= 0:
+            return
+        if not towers:
+            return
+
+        self._orb_timer -= 1
+        if self._orb_timer > 0:
+            return
+
+        # phases op basis van HP% (cooler & agressiever als hij laag staat)
+        hp_pct = self.hp / max(1, self.max_hp)
+
+        if hp_pct > 0.66:
+            count = 1
+            cd = int(2.2 * FPS)
+            speed = 5.0 * SCALE
+        elif hp_pct > 0.33:
+            count = 2
+            cd = int(1.6 * FPS)
+            speed = 5.6 * SCALE
+        else:
+            count = 3
+            cd = int(1.1 * FPS)
+            speed = 6.2 * SCALE
+
+        # Lazy import zodat je nog geen orb-file hoeft te hebben totdat we die stap doen
+        from projectiles.lightning_orb import LightningOrb
+
+        # kies targets: dichtstbij / random mix
+        # (random voelt boss-y; dichtstbij voelt "smart")
+        for _ in range(count):
+            target = min(towers, key=lambda t: (t.x - self.x) ** 2 + (t.y - self.y) ** 2)
+
+            orb = LightningOrb(
+                x=self.x,
+                y=self.y,
+                target=target,
+                speed=speed,
+            )
+            enemy_projectiles.append(orb)
+
+        self._orb_timer = cd

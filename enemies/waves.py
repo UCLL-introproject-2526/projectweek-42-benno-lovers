@@ -1,5 +1,6 @@
-from enemies.enemy_base import Enemy
+from enemies.enemy_base import Enemy, BennoBoss
 import random
+
 def spawn_enemy_for_wave(
     wave,
     path,
