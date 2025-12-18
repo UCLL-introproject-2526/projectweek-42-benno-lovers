@@ -9,8 +9,9 @@ from world.base import Base
 # Towers
 from towers.towers import Tower, SniperTower, SlowTower
 
-# Enemies
-from enemies.enemy_types import Enemy, FastEnemy
+#Enemy
+from enemies.enemy_base import Enemy
+from enemies.waves import spawn_enemy_for_wave
 
 # Projectiles
 from projectiles.bullet import Bullet  # alleen nodig als je Bullet direct gebruikt
@@ -126,6 +127,10 @@ def run_level(level: Level):
         start_money=210, start_enemies=6, base_spawn_sec=1.25, inter_wave_sec=2.1,
         hp_scale=0.12, dmg_scale=0.065, spd_scale=0.011, level_boost=0.05
     ))
+    print("LEVEL:", level.level)
+    print("CFG:", cfg)
+    print("START_ENEMIES:", cfg["start_enemies"])
+
 
     money = 99999999 if DEV_INFINITE_MONEY else cfg["start_money"]
     score = 0
@@ -134,12 +139,15 @@ def run_level(level: Level):
     max_waves = level_wave_map.get(level.level, 5)
     wave = 1
 
-    wave_started = False
     spawn_timer = 0
-
+    boss_spawned = False
     base_spawn_interval = int(cfg["base_spawn_sec"] * FPS)
-    min_spawn_interval = int(0.75 * FPS)  # spawn wordt sneller later, maar niet belachelijk
 
+    spawn_interval = base_spawn_interval
+    spawn_timer = 0
+        
+    
+    
     enemies_spawned = 0
     enemies_per_wave = cfg["start_enemies"]
 
@@ -155,10 +163,9 @@ def run_level(level: Level):
     level_boost_factor = cfg["level_boost"]
     # ---------------------------------------------------
 
-    def is_boss_wave(w):
-        return w % 5 == 0
 
-    boss_spawned = False
+
+
 
     selected = None
     dragged = None
@@ -279,110 +286,6 @@ def run_level(level: Level):
 
         if dragged and not game_over:
             dragged.x, dragged.y = mx, my
-
-        # ------------------ WAVES / SPAWN ------------------
-        if not game_over and wave <= max_waves:
-            if between_waves > 0:
-                between_waves -= 1
-            else:
-                if not wave_started:
-                    boss_spawned = False
-                    start_overlay(f"Wave {wave} starting!", (255, 255, 0), 1.1)
-                    wave_started = True
-
-                # spawn wordt sneller per wave (maar waves worden vooral langer door meer enemies)
-                spawn_interval = max(min_spawn_interval, int(base_spawn_interval - (wave - 1) * 0.04 * FPS))
-                spawn_timer += 1
-
-                if enemies_spawned < enemies_per_wave and spawn_timer >= spawn_interval:
-                    spawn_timer = 0
-                    path_to_use = paths[(wave + enemies_spawned) % len(paths)]
-
-                    # ✅ difficulty ramp: early eerlijk, later zwaarder
-                    if wave == 1:
-                        e = Enemy(path_to_use, strong=False)
-                    elif wave <= 2:
-                        e = FastEnemy(path_to_use) if random.random() < 0.12 else Enemy(path_to_use, strong=False)
-                    elif wave <= 4:
-                        r = random.random()
-                        if r < 0.18:
-                            e = FastEnemy(path_to_use)
-                        elif r < 0.88:
-                            e = Enemy(path_to_use, strong=False)
-                        else:
-                            e = Enemy(path_to_use, strong=True)
-                    else:
-                        r = random.random()
-                        if r < 0.22:
-                            e = FastEnemy(path_to_use)
-                        elif r < 0.72:
-                            e = Enemy(path_to_use, strong=False)
-                        else:
-                            e = Enemy(path_to_use, strong=True)
-
-                    # ✅ ramp na wave 4: extra scaling erbij
-                    ramp = max(0, wave - 4)
-                    ramp_hp = 0.015 * ramp
-                    ramp_dmg = 0.010 * ramp
-                    ramp_spd = 0.003 * ramp
-
-                    level_boost = (level.level - 1) * level_boost_factor
-
-                    e.max_hp = int(e.max_hp * (1.0 + (hp_scale + ramp_hp) * (wave - 1) + level_boost))
-                    e.hp = e.max_hp
-                    e.damage = int(e.damage * (1.0 + (dmg_scale + ramp_dmg) * (wave - 1) + level_boost))
-                    e.base_speed = e.base_speed * (1.0 + (spd_scale + ramp_spd) * (wave - 1))
-
-                    enemies.append(e)
-                    enemies_spawned += 1
-
-                # boss wave (blijft stevig)
-                if is_boss_wave(wave) and enemies_spawned >= enemies_per_wave and not boss_spawned:
-                    if spawn_timer >= int(1.0 * FPS):
-                        path_to_use = paths[wave % len(paths)]
-                        b = Enemy(path_to_use, boss=True)
-
-                        ramp = max(0, wave - 4)
-                        level_boost = (level.level - 1) * (level_boost_factor + 0.05)
-
-                        b.max_hp = int(b.max_hp * (1.0 + (hp_scale + 0.12 + 0.02 * ramp) * (wave - 1) + level_boost))
-                        b.hp = b.max_hp
-                        b.damage = int(b.damage * (1.0 + (dmg_scale + 0.05 + 0.015 * ramp) * (wave - 1) + level_boost))
-                        b.base_speed = b.base_speed * (1.0 + (spd_scale + 0.006 + 0.002 * ramp) * (wave - 1))
-
-                        enemies.append(b)
-                        boss_spawned = True
-                        spawn_timer = 0
-
-                # wave complete
-                if enemies_spawned >= enemies_per_wave and len(enemies) == 0 and (not is_boss_wave(wave) or boss_spawned):
-                    wave += 1
-                    enemies_spawned = 0
-
-                    # ✅ waves langer + ramp: meer enemies per wave naarmate je verder gaat
-                    # - early: +2
-                    # - vanaf wave 4: +3
-                    # - vanaf wave 7: +4
-                    if wave <= 4:
-                        enemies_per_wave += 2
-                    elif wave <= 7:
-                        enemies_per_wave += 3
-                    else:
-                        enemies_per_wave += 4
-
-                    wave_started = False
-                    between_waves = inter_wave_pause
-                    spawn_timer = 0
-
-                    if wave > max_waves:
-                        start_overlay(f"Level {level.level} Completed!", (0, 255, 0), 2.0)
-                        for _ in range(int(1.0 * FPS)):
-                            clock.tick(FPS)
-                            screen.fill(BG_COLOR)
-                            draw_overlay()
-                            pygame.display.flip()
-                        return ("MENU", None)
-
         # ------------------ ENEMIES UPDATE ------------------
         for e in enemies[:]:
             res = e.move()
@@ -396,6 +299,68 @@ def run_level(level: Level):
                 enemies.remove(e)
                 if base.hp <= 0:
                     game_over = True
+
+
+        # ✅ ALS JE DOOD BENT: stop hier met waves/spawn logic
+        if not game_over:
+
+            # ------------------ WAVES / SPAWN ------------------
+            spawn_timer += 1
+            if enemies_spawned < enemies_per_wave and spawn_timer >= spawn_interval:
+                spawn_timer = 0
+
+                path_to_use = paths[(wave + enemies_spawned) % len(paths)]
+                e, boss_spawned = spawn_enemy_for_wave(wave, path_to_use, boss_spawned)
+
+                # scaling (zelfde als bij jou)
+                ramp = max(0, wave - 4)
+                ramp_hp  = 0.015 * ramp
+                ramp_dmg = 0.010 * ramp
+                ramp_spd = 0.003 * ramp
+
+                level_boost = (level.level - 1) * level_boost_factor
+
+                e.max_hp = int(e.max_hp * (1.0 + (hp_scale + ramp_hp) * (wave - 1) + level_boost))
+                e.hp = e.max_hp
+                e.damage = int(e.damage * (1.0 + (dmg_scale + ramp_dmg) * (wave - 1) + level_boost))
+                e.base_speed *= (1.0 + (spd_scale + ramp_spd) * (wave - 1))
+
+                enemies.append(e)
+                enemies_spawned += 1
+
+
+            # ------------------ WAVE COMPLETE ------------------
+            def is_boss_wave(w):
+                return w % 5 == 0
+
+            if enemies_spawned >= enemies_per_wave and len(enemies) == 0:
+
+                if is_boss_wave(wave) and wave >= max_waves:
+                    start_overlay(f"Level {level.level} Completed!", (0, 255, 0), 2.0)
+                    for _ in range(int(1.0 * FPS)):
+                        clock.tick(FPS)
+                        screen.fill(BG_COLOR)
+                        draw_overlay()
+                        pygame.display.flip()
+                    return ("MENU", None)
+
+                wave += 1
+                enemies_spawned = 0
+                boss_spawned = False
+                spawn_timer = 0
+
+                if wave <= 4:
+                    enemies_per_wave += 2
+                elif wave <= 7:
+                    enemies_per_wave += 3
+                else:
+                    enemies_per_wave += 4
+
+                print(f"=== WAVE {wave} START ===")
+
+
+
+
 
         # ------------------ TOWERS SHOOT ------------------
         for t in towers:
