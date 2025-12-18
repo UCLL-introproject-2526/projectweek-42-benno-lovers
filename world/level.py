@@ -30,7 +30,7 @@ from settings import (
     DEV_INFINITE_MONEY, FPS, BG_COLOR, clock, screen,
     SELL_REFUND, SNIPER_TOWER_COST, SLOW_TOWER_COST,
     TOWER_COST, PATH_WIDTH, SCALE, WIDTH, HEIGHT,
-    SMALL_FONT, FONT, BIG_FONT
+    SMALL_FONT, FONT, BIG_FONT,START_WAVE
 )
 
 
@@ -130,7 +130,9 @@ def run_level(level: Level):
     game_over = False
 
     max_waves = level_wave_map.get(level.level, 5)
-    wave = 1
+    # ---- START WAVE (via settings.py) ----
+    wave = max(1, min(START_WAVE, max_waves))
+
 
     boss_spawned = False
     base_spawn_interval = int(cfg["base_spawn_sec"] * FPS)
@@ -141,7 +143,18 @@ def run_level(level: Level):
     spawn_timer = -initial_delay_frames + spawn_interval
 
     enemies_spawned = 0
+    # ---- enemies per wave correct maken als je later start ----
     enemies_per_wave = cfg["start_enemies"]
+
+    # in jouw logic: bij overgang naar wave 2..N verhoog je enemies_per_wave
+    for w in range(2, wave + 1):
+        if w <= 4:
+            enemies_per_wave += 2
+        elif w <= 7:
+            enemies_per_wave += 3
+        else:
+            enemies_per_wave += 4
+
 
     inter_wave_pause = int(cfg["inter_wave_sec"] * FPS)
 
