@@ -9,12 +9,13 @@ from world.base import Base
 # Towers
 from towers.towers import Tower, SniperTower, SlowTower
 
-#Enemy
+# Enemy
 from enemies.enemy_base import Enemy
 from enemies.waves import spawn_enemy_for_wave
 
 # Projectiles
 from projectiles.bullet import Bullet  # alleen nodig als je Bullet direct gebruikt
+from projectiles.lightning_orb import LightningOrb  # ⚡ Benno orbs
 
 # Utils
 from utils.placement import is_on_any_path, too_close_to_tower, tower_at_pos, same_tower_type
@@ -54,6 +55,7 @@ class Level:
         self.finished = False
 
     def update(self, dt):
+        # (wordt in jouw run_level niet gebruikt, maar laten staan)
         for enemy in self.enemies[:]:
             enemy.update(dt)
             if enemy.reached_base:
@@ -75,9 +77,10 @@ class Level:
         else:
             surface.fill(BG_COLOR)
 
+        # ✅ pad onzichtbaar in level 4
         if self.level != 4:
-         for path in self.paths:
-          draw_path(surface, path, PATH_WIDTH)
+            for path in self.paths:
+                draw_path(surface, path, PATH_WIDTH)
 
         for tower in self.towers:
             if hasattr(tower, "draw_base"):
@@ -86,7 +89,7 @@ class Level:
                 tower.draw(surface)
 
         for enemy in self.enemies:
-            enemy.draw(surface)
+            enemy.draw()
 
 
 def run_level(level: Level):
@@ -100,23 +103,12 @@ def run_level(level: Level):
     enemies = []
     towers = []
     bullets = []
+    enemy_projectiles = []  # ⚡ Benno lightning balls
 
     # ------------------ BALANCE CONFIG ------------------
-    # Idee:
-    # - wave 1 haalbaar
-    # - waves langer (meer enemies per wave)
-    # - ramp na wave 4 (sneller scaling + meer enemies)
     BALANCE = {
-        1: dict(
-            start_money=220,
-            start_enemies=5,
-            base_spawn_sec=1.30,     # niet super snel
-            inter_wave_sec=2.2,
-            hp_scale=0.11,
-            dmg_scale=0.06,
-            spd_scale=0.010,
-            level_boost=0.04
-        ),
+        1: dict(start_money=220, start_enemies=5, base_spawn_sec=1.30, inter_wave_sec=2.2,
+                hp_scale=0.11, dmg_scale=0.06, spd_scale=0.010, level_boost=0.04),
         2: dict(start_money=210, start_enemies=6, base_spawn_sec=1.25, inter_wave_sec=2.1,
                 hp_scale=0.12, dmg_scale=0.065, spd_scale=0.011, level_boost=0.05),
         3: dict(start_money=220, start_enemies=7, base_spawn_sec=1.20, inter_wave_sec=2.0,
@@ -128,10 +120,6 @@ def run_level(level: Level):
         start_money=210, start_enemies=6, base_spawn_sec=1.25, inter_wave_sec=2.1,
         hp_scale=0.12, dmg_scale=0.065, spd_scale=0.011, level_boost=0.05
     ))
-    print("LEVEL:", level.level)
-    print("CFG:", cfg)
-    print("START_ENEMIES:", cfg["start_enemies"])
-
 
     money = 99999999 if DEV_INFINITE_MONEY else cfg["start_money"]
     score = 0
@@ -140,25 +128,19 @@ def run_level(level: Level):
     max_waves = level_wave_map.get(level.level, 5)
     wave = 1
 
-    spawn_timer = 0
     boss_spawned = False
     base_spawn_interval = int(cfg["base_spawn_sec"] * FPS)
-
     spawn_interval = base_spawn_interval
 
-   # ✅ 5 seconden wachten vóór wave 1 echt start (eerste enemy spawn)
+    # ✅ 5 seconden wachten vóór wave 1 echt start (eerste enemy spawn)
     initial_delay_frames = int(5 * FPS)
     spawn_timer = -initial_delay_frames + spawn_interval
 
-        
-    
-    
     enemies_spawned = 0
     enemies_per_wave = cfg["start_enemies"]
 
     inter_wave_pause = int(cfg["inter_wave_sec"] * FPS)
 
-    # ✅ korte build phase (genoeg om 1–2 towers te zetten)
     between_waves = int(2.5 * FPS)
     start_overlay("Build phase: place towers!", (180, 220, 255), 5)
 
@@ -167,10 +149,6 @@ def run_level(level: Level):
     spd_scale = cfg["spd_scale"]
     level_boost_factor = cfg["level_boost"]
     # ---------------------------------------------------
-
-
-
-
 
     selected = None
     dragged = None
@@ -291,9 +269,14 @@ def run_level(level: Level):
 
         if dragged and not game_over:
             dragged.x, dragged.y = mx, my
+
         # ------------------ ENEMIES UPDATE ------------------
         for e in enemies[:]:
             res = e.move()
+
+            # ⚡ Benno kan schieten (maakt LightningOrb's)
+            if hasattr(e, "shoot"):
+                e.shoot(towers, enemy_projectiles)
 
             if res == "DEAD":
                 enemies.remove(e)
@@ -305,20 +288,28 @@ def run_level(level: Level):
                 if base.hp <= 0:
                     game_over = True
 
+        # ------------------ BENNO PROJECTILES ------------------
+        # Orbs vliegen naar tower-target. Als orb "arrived": tower wordt verwijderd.
+        for orb in enemy_projectiles[:]:
+            orb.update()
+            if not orb.alive:
+                # als hij stierf omdat hij het target raakte -> tower weg
+                if getattr(orb, "target", None) in towers:
+                    towers.remove(orb.target)
+                enemy_projectiles.remove(orb)
 
         # ✅ ALS JE DOOD BENT: stop hier met waves/spawn logic
         if not game_over:
-
             # ------------------ WAVES / SPAWN ------------------
             spawn_timer += 1
             if enemies_spawned < enemies_per_wave and spawn_timer >= spawn_interval:
                 spawn_timer = 0
 
                 path_to_use = paths[(wave + enemies_spawned) % len(paths)]
-                e, boss_spawned = spawn_enemy_for_wave(wave, path_to_use, level.level , boss_spawned)
+                e, boss_spawned = spawn_enemy_for_wave(wave, path_to_use, level.level, boss_spawned)
 
                 ramp = max(0, wave - 4)
-                ramp_hp  = 0.015 * ramp
+                ramp_hp = 0.015 * ramp
                 ramp_dmg = 0.010 * ramp
                 ramp_spd = 0.003 * ramp
 
@@ -332,13 +323,11 @@ def run_level(level: Level):
                 enemies.append(e)
                 enemies_spawned += 1
 
-
             # ------------------ WAVE COMPLETE ------------------
             def is_boss_wave(w):
                 return w % 5 == 0
 
             if enemies_spawned >= enemies_per_wave and len(enemies) == 0:
-
                 if is_boss_wave(wave) and wave >= max_waves:
                     start_overlay(f"Level {level.level} Completed!", (0, 255, 0), 2.0)
                     for _ in range(int(1.0 * FPS)):
@@ -361,7 +350,6 @@ def run_level(level: Level):
                     enemies_per_wave += 4
 
                 print(f"=== WAVE {wave} START ===")
-
 
         # ------------------ TOWERS SHOOT ------------------
         for t in towers:
@@ -393,8 +381,8 @@ def run_level(level: Level):
 
         # ------------------ DRAW ------------------
         if level.level != 4:
-         for p in paths:
-          draw_path(screen, p, PATH_WIDTH)
+            for p in paths:
+                draw_path(screen, p, PATH_WIDTH)
 
         base.draw()
 
@@ -403,6 +391,10 @@ def run_level(level: Level):
 
         for t in towers:
             t.draw_base(enemies)
+
+        # ⚡ draw benno orbs
+        for orb in enemy_projectiles:
+            orb.draw()
 
         # ------------------ PLACEMENT PREVIEW ------------------
         if placing_preview and placing_type:
