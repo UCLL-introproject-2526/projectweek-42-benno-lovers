@@ -95,9 +95,13 @@ class Level:
 def run_level(level: Level):
     paths = level_paths[level.level]
     base = Base(*level_base[level.level])
-
-    pygame.mixer.music.load("assets\\music\\SpotiDown.App - Mother North - Satyricon.mp3")
-    pygame.mixer.music.set_volume(0.65)
+    # ------------------ MUSIC ------------------
+    if level.level <= 3:
+        pygame.mixer.music.load("assets\\music\\Sower.mp3")
+        pygame.mixer.music.set_volume(0.75)
+    else:
+        pygame.mixer.music.load("assets\\music\\SpotiDown.App - Mother North - Satyricon.mp3")
+        pygame.mixer.music.set_volume(0.65)
     pygame.mixer.music.play(-1)
 
     enemies = []
