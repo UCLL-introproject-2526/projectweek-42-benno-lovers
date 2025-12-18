@@ -4,45 +4,40 @@ from settings import SCALE, BOSS_COLOR, STRONG_ENEMY_COLOR, ENEMY_COLOR, FPS, sc
 from utils.draw import hp_bar
 
 
+from enemies.enemy_types import ENEMY_TYPES
+from settings import SCALE
+
 class Enemy:
-    def __init__(self, path, strong=False, boss=False):
+    def __init__(self, path, enemy_type="normal"):
+        t = ENEMY_TYPES[enemy_type]
+
         self.path = path
         self.x, self.y = path[0]
-        self.i = 1  # next waypoint index
+        self.i = 1
 
-        self.base_speed = ((1.5 if strong else 2.2) * SCALE)
+        self.max_hp = t["hp"]
+        self.hp = self.max_hp
+        self.damage = t["damage"]
+
+        self.base_speed = t["speed"] * SCALE
         self.speed = self.base_speed
 
-        if boss:
-            self.max_hp = 4000
-            self.damage = 2999
-            self.reward_money = 250
-            self.reward_score = 250
-            self.color = BOSS_COLOR
-            self.radius = max(18, int(26 * SCALE))
-            self.is_boss = True
-            self.base_speed = self.speed * 0.3
+        self.radius = max(8, int(t["radius"] * SCALE))
+        self.color = t["color"]
 
-        else:
-            self.max_hp = 500 if strong else 155
-            self.damage = 25 if strong else 10
-            self.reward_money = 35 if strong else 25
-            self.reward_score = 30 if strong else 10
-            self.color = STRONG_ENEMY_COLOR if strong else ENEMY_COLOR
-            self.radius = max(12, int((20 if strong else 14) * SCALE))
-            self.is_boss = False
+        self.reward_money = t["reward_money"]
+        self.reward_score = t["reward_score"]
 
-        self.hp = self.max_hp
+        self.is_boss = (enemy_type == "boss")
 
         # status effects
         self.slow_ticks = 0
         self.slow_factor = 1.0
 
-        # poison
         self.poison_ticks = 0
         self.poison_dps = 0.0
 
-        # for smoother FIRST targeting: fraction progress on current segment
+        # targeting helper
         self.segment_frac = 0.0
 
     def progress(self):
@@ -75,7 +70,6 @@ class Enemy:
                 return True  # <- DIED FROM POISON
         else:
             self.poison_dps = 0.0
-
         return False
 
     def move(self):
