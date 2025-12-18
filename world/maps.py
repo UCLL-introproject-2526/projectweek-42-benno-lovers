@@ -84,8 +84,8 @@ level_base = {
 level_wave_map = {
     1: 5,
     2: 10,
-    3: 14,
-    4: 5,
+    3: 15,
+    4: 20,
 }
 
 level_backgrounds = {
