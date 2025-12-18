@@ -144,7 +144,11 @@ def run_level(level: Level):
     base_spawn_interval = int(cfg["base_spawn_sec"] * FPS)
 
     spawn_interval = base_spawn_interval
-    spawn_timer = 0
+
+   # ✅ 5 seconden wachten vóór wave 1 echt start (eerste enemy spawn)
+    initial_delay_frames = int(5 * FPS)
+    spawn_timer = -initial_delay_frames + spawn_interval
+
         
     
     
@@ -155,7 +159,7 @@ def run_level(level: Level):
 
     # ✅ korte build phase (genoeg om 1–2 towers te zetten)
     between_waves = int(2.5 * FPS)
-    start_overlay("Build phase: place towers!", (180, 220, 255), 1.4)
+    start_overlay("Build phase: place towers!", (180, 220, 255), 5)
 
     hp_scale = cfg["hp_scale"]
     dmg_scale = cfg["dmg_scale"]
