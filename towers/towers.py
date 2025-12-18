@@ -126,7 +126,7 @@ class TowerBase:
 
         pad = 4
         bx = int(self.x) - txt_main.get_width() // 2
-        by = int(self.y) - int(28 * SCALE)  # iets boven de tower
+        by = int(self.y) - int(36 * SCALE)  # iets boven de tower
 
         # donker achtergrondje
         pygame.draw.rect(
