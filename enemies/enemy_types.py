@@ -44,7 +44,7 @@ ENEMY_TYPES = {
         "hp": 4000,
         "damage": 2999,
         "speed": 0.66,
-        "radius": 26,
+        "radius": 40,
         "color": BOSS_COLOR,
         "reward_money": 250,
         "reward_score": 250,
