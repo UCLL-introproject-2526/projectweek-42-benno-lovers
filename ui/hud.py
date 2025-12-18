@@ -28,10 +28,10 @@ def draw_hud(money, score, base_hp, wave, max_waves):
     screen.blit(render_text_outline(FONT, f"Wave: {wave}/{max_waves}"), (10, 100))
 
     # Rechts boven (tower controls + costs)
-    rx = WIDTH - 380
-    screen.blit(render_text_outline(FONT, f"LMB = Normal ({TOWER_COST}$)"), (rx, 10))
-    screen.blit(render_text_outline(FONT, f"S + LMB = Sniper ({SNIPER_TOWER_COST}$)"), (rx, 35))
-    screen.blit(render_text_outline(FONT, f"A + LMB = Slow ({SLOW_TOWER_COST}$)"), (rx, 60))
+    rx = WIDTH - 240
+    screen.blit(render_text_outline(FONT, f"LMB = Normal ({TOWER_COST}$)"), (rx, 800))
+    screen.blit(render_text_outline(FONT, f"S + LMB = Sniper ({SNIPER_TOWER_COST}$)"), (rx, 740))
+    screen.blit(render_text_outline(FONT, f"A + LMB = Slow ({SLOW_TOWER_COST}$)"), (rx, 770))
 
 
 

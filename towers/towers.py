@@ -4,6 +4,7 @@ from projectiles.bullet import Bullet
 from utils.draw import hp_bar
 from settings import TOWER_COLOR, TOWER_COST, SNIPER_TOWER_COST, SLOW_TOWER_COST, POISON_TOWER_COST, SCALE, MAX_TOWER_LEVEL, TARGET_FIRST, TARGET_MODES, SMALL_FONT, TARGET_STRONG, TEXT_COLOR, screen
 
+# ================== SOUND EFFECTS ==================
 SHOOT_SOUND = pygame.mixer.Sound("assets\\sounds\\SHOTGUN_FINAL.mp3")
 SHOOT_SOUND.set_volume(1)
 
@@ -15,6 +16,11 @@ SLOW_SHOOT_SOUND.set_volume(1)
 
 POISON_SHOOT_SOUND = pygame.mixer.Sound("assets\\sounds\\SHOTGUN_FINAL.mp3")
 POISON_SHOOT_SOUND.set_volume(1)
+
+SHOOT_CHANNEL = pygame.mixer.Channel(0)
+SNIPER_CHANNEL = pygame.mixer.Channel(1)
+SLOW_CHANNEL = pygame.mixer.Channel(2)
+POISON_CHANNEL = pygame.mixer.Channel(3)
 
 # ================== TURRET IDLE SPRITE ==================
 TURRET_IDLE_RAW = pygame.image.load(r"assets/images/TurretIdle.png").convert_alpha()
@@ -141,7 +147,8 @@ class TowerBase:
             return
 
         bullets.append(Bullet(self.x, self.y, target, self.damage))
-        SHOOT_SOUND.play()
+        if not SHOOT_CHANNEL.get_busy():
+            SHOOT_CHANNEL.play(SHOOT_SOUND)
         self.cooldown = self.fire_rate
 # Basis Tower class waar alle specifieke towers van erven
 class Tower(TowerBase):
@@ -187,7 +194,8 @@ class SniperTower(Tower):
             return
 
         bullets.append(Bullet(self.x, self.y, target, self.damage))
-        SNIPER_SOUND.play()
+        if not SNIPER_CHANNEL.get_busy():
+            SNIPER_CHANNEL.play(SHOOT_SOUND)
         self.cooldown = self.fire_rate
 
 
@@ -212,7 +220,8 @@ class SlowTower(Tower):
             return
 
         bullets.append(Bullet(self.x, self.y, target, self.damage, effect=("slow", 0.5, 120)))
-        SLOW_SHOOT_SOUND.play()
+        if not SLOW_CHANNEL.get_busy():
+            SLOW_CHANNEL.play(SHOOT_SOUND)
         self.cooldown = self.fire_rate
 
 
@@ -237,5 +246,6 @@ class PoisonTower(Tower):
             return
 
         bullets.append(Bullet(self.x, self.y, target, self.damage, effect=("poison", 2, 180)))
-        POISON_SHOOT_SOUND.play()
+        if not POISON_CHANNEL.get_busy():
+            POISON_CHANNEL.play(SHOOT_SOUND)
         self.cooldown = self.fire_rate
