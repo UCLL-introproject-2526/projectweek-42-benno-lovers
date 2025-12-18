@@ -75,8 +75,9 @@ class Level:
         else:
             surface.fill(BG_COLOR)
 
-        for path in self.paths:
-            draw_path(surface, path, PATH_WIDTH)
+        if self.level != 4:
+         for path in self.paths:
+          draw_path(surface, path, PATH_WIDTH)
 
         for tower in self.towers:
             if hasattr(tower, "draw_base"):
@@ -395,8 +396,9 @@ def run_level(level: Level):
                     score += b.target.reward_score
 
         # ------------------ DRAW ------------------
-        for p in paths:
-            draw_path(screen, p, PATH_WIDTH)
+        if level.level != 4:
+         for p in paths:
+          draw_path(screen, p, PATH_WIDTH)
 
         base.draw()
 
