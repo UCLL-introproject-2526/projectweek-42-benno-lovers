@@ -68,7 +68,7 @@ class Enemy:
 
         self.reward_money = t["reward_money"]
         self.reward_score = t["reward_score"]
-        self.is_boss = (enemy_type == "boss")
+        self.is_boss = enemy_type.startswith("boss")
 
         # status effects
         self.slow_ticks = 0
@@ -154,10 +154,7 @@ class Enemy:
             scale_factor = 2.2
 
             t = ENEMY_TYPES[self.enemy_type]
-            if self.enemy_type == "boss":
-                scale_factor = t.get("sprite_scale", {}).get(self.level_id, 2.2)
-            else:
-                scale_factor = t.get("sprite_scale", 2.2)
+            scale_factor = t.get("sprite_scale", 2.2)
 
             target_h = int(self.radius * scale_factor)
 
