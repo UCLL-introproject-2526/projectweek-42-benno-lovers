@@ -168,7 +168,7 @@ class SniperTower(Tower):
         self.sprite_scale = 0.60
         self.idle_frames = SNIPER_IDLE_FRAMES
         self.firing_frames = SNIPER_SHOOTING_FRAMES
-        self.anim_speed = 0.10
+        self.anim_speed = 0.07
 
     def shoot(self, enemies, bullets):
         if self.dragging or self.cooldown > 0:
