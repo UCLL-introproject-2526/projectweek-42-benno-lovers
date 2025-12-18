@@ -151,7 +151,16 @@ class Enemy:
             self.anim_index = (self.anim_index + self.anim_speed) % len(self.frames)
             frame = self.frames[int(self.anim_index)]
 
-            target_h = max(1, int(self.radius * 2.2))
+            scale_factor = 2.2
+
+            t = ENEMY_TYPES[self.enemy_type]
+            if self.enemy_type == "boss":
+                scale_factor = t.get("sprite_scale", {}).get(self.level_id, 2.2)
+            else:
+                scale_factor = t.get("sprite_scale", 2.2)
+
+            target_h = int(self.radius * scale_factor)
+
             scale = target_h / frame.get_height()
 
             new_w = max(1, int(frame.get_width() * scale))
