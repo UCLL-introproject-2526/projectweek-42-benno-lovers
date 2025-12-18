@@ -1,5 +1,6 @@
 import pygame
 import math
+from projectiles.lightning_orb import LightningOrb
 
 from settings import SCALE, FPS, screen
 from utils.draw import hp_bar
@@ -193,39 +194,30 @@ class Enemy:
 # BENNO (special boss die lightning balls op towers schiet)
 # ======================================================
 class BennoBoss(Enemy):
-    """
-    Gebruik deze class alleen wanneer je Benno wil spawnen (level 4 wave 20).
-    Hij gebruikt het bestaande sprite-systeem door enemy_type='boss' te nemen.
-    """
     def __init__(self, path, level_id=4):
-        super().__init__(path, enemy_type="boss", level_id=level_id)
+        # ✅ gebruik bestaand boss-type uit ENEMY_TYPES (boss1..boss4)
+        boss_type = f"boss{min(int(level_id or 4), 4)}"  # level 4 -> boss4
+        super().__init__(path, enemy_type=boss_type, level_id=level_id)
 
-        self.is_benno = True  # handig om later in level.py te detecteren
+        # ✅ HP verdriedubbelen
+        self.max_hp = int(self.max_hp * 3)
+        self.hp = self.max_hp
 
-        # cooldowns (frames)
-        self._orb_cd = int(2.2 * FPS)     # start cooldown
-        self._orb_timer = int(1.0 * FPS) # eerste aanval sneller
+        self.is_benno = True
 
-        # basis orb stats (gaan in phases mee omhoog)
+        self._orb_cd = int(2.2 * FPS)
+        self._orb_timer = int(1.0 * FPS)
         self._orb_speed = 5.0 * SCALE
-        self._orb_damage = 1  # jij gaat towers "one-shot" doen in level.py; damage kan later nuttig zijn.
+        self._orb_damage = 1
 
     def shoot(self, towers, enemy_projectiles):
-        """
-        Wordt elke frame opgeroepen vanuit level.py.
-        towers = lijst van towers in het level
-        enemy_projectiles = lijst waar we orbs in pushen
-        """
-        if self.hp <= 0:
-            return
-        if not towers:
+        if self.hp <= 0 or not towers:
             return
 
         self._orb_timer -= 1
         if self._orb_timer > 0:
             return
 
-        # phases op basis van HP% (cooler & agressiever als hij laag staat)
         hp_pct = self.hp / max(1, self.max_hp)
 
         if hp_pct > 0.66:
@@ -241,20 +233,11 @@ class BennoBoss(Enemy):
             cd = int(1.1 * FPS)
             speed = 6.2 * SCALE
 
-        # Lazy import zodat je nog geen orb-file hoeft te hebben totdat we die stap doen
         from projectiles.lightning_orb import LightningOrb
 
-        # kies targets: dichtstbij / random mix
-        # (random voelt boss-y; dichtstbij voelt "smart")
         for _ in range(count):
             target = min(towers, key=lambda t: (t.x - self.x) ** 2 + (t.y - self.y) ** 2)
-
-            orb = LightningOrb(
-                x=self.x,
-                y=self.y,
-                target=target,
-                speed=speed,
-            )
+            orb = LightningOrb(x=self.x, y=self.y, target=target, speed=speed)
             enemy_projectiles.append(orb)
 
         self._orb_timer = cd
