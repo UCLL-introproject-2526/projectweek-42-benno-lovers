@@ -38,15 +38,7 @@ _level_paths_base = {
     ],
 
 
-    # Map 3 — multi-lane
-    31: [
-        (-50, 180), (120, 180), (120, 80),
-        (420, 80), (420, 260), (560, 260), (560, 550)
-    ],
-    32: [
-        (850, 420), (680, 420), (680, 520),
-        (260, 520), (260, 320), (560, 320), (560, 550)
-    ],
+    
         # Map 4 — slingerpad
     3: [
         (-50, 400),
@@ -58,6 +50,15 @@ _level_paths_base = {
         (588, 134),
         (710, 133)
     ],
+    # Map 3 — multi-lane
+    41: [
+        (-50, 180), (120, 180), (120, 80),
+        (420, 80), (420, 260), (560, 260), (560, 550)
+    ],
+    42: [
+        (850, 420), (680, 420), (680, 520),
+        (260, 520), (260, 320), (560, 320), (560, 550)
+    ],
 
 
 
@@ -66,28 +67,29 @@ _level_paths_base = {
 level_paths = {
     1: [spath(_level_paths_base[1])],
     2: [spath(_level_paths_base[2])],
-    3: [spath(_level_paths_base[31]), spath(_level_paths_base[32])],
-    4: [spath(_level_paths_base[3])],
+    3: [spath(_level_paths_base[3])],
+    4: [spath(_level_paths_base[41]), spath(_level_paths_base[42])],
 
 }
 
 level_base = {
     1: sp((393, 206)),
     2: sp((400, 150)),
-    3: sp((560, 550)),
-    4: sp((710, 133)),
+    3: sp((710, 133)),
+    4: sp((560, 550)),
+    
 
 }
 
 level_wave_map = {
     1: 5,
     2: 10,
-    3: 14,
-    4: 5,
+    3: 15,
+    4: 20,
 }
 
 level_backgrounds = {
     1: "assets/images/BG_Restaurant.png",
     2: "assets/images/BG_Aula.png",
-    4: "assets/images/BG_Classroom.png"
+    3: "assets/images/BG_Classroom.png"
 }
