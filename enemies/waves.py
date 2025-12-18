@@ -1,13 +1,17 @@
-from enemies.enemy_base import Enemy
+from enemies.enemy_base import Enemy, BennoBoss
 import random
 
 
 def spawn_enemy_for_wave(wave, path, level, boss_already_spawned: bool):
-    # 1 boss per boss-wave
-    if wave % 5 == 0 and not boss_already_spawned:
-        return Enemy(path, "boss", level), True
+    # ✅ Benno ONLY: level 4, wave 20 (1x)
+    if level == 4 and wave == 20 and not boss_already_spawned:
+        return BennoBoss(path, level_id=level), True
 
-    # anders normale logic
+    # ❌ oude boss-wave logic uitzetten (anders krijg je bosses op wave 5,10,15,...)
+    # if wave % 5 == 0 and not boss_already_spawned:
+    #     return Enemy(path, "boss", level), True
+
+    # ---- normale enemies ----
     if wave == 1:
         return Enemy(path, "normal"), boss_already_spawned
 
