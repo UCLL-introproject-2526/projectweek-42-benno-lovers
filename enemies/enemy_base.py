@@ -177,5 +177,16 @@ class Enemy:
             pygame.draw.circle(screen, self.color, (cx, cy), self.radius)
 
         bar_w = max(44, int((70 if self.is_boss else 55) * SCALE))
-        hp_bar(cx, int(cy - 30 * SCALE), self.hp, self.max_hp, bar_w,
-               h=max(6, int(8 * SCALE)))
+        # ---- HP BAR (boven sprite, dynamisch) ----
+        sprite_half_h = target_h // 2
+        hp_offset = sprite_half_h + int(6 * SCALE)
+
+        hp_bar(
+            cx,
+            cy - hp_offset,
+            self.hp,
+            self.max_hp,
+            bar_w,
+            h=max(6, int(8 * SCALE))
+        )
+
