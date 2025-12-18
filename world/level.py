@@ -310,9 +310,8 @@ def run_level(level: Level):
                 spawn_timer = 0
 
                 path_to_use = paths[(wave + enemies_spawned) % len(paths)]
-                e, boss_spawned = spawn_enemy_for_wave(wave, path_to_use, boss_spawned)
+                e, boss_spawned = spawn_enemy_for_wave(wave, path_to_use, level.level , boss_spawned)
 
-                # scaling (zelfde als bij jou)
                 ramp = max(0, wave - 4)
                 ramp_hp  = 0.015 * ramp
                 ramp_dmg = 0.010 * ramp
@@ -357,9 +356,6 @@ def run_level(level: Level):
                     enemies_per_wave += 4
 
                 print(f"=== WAVE {wave} START ===")
-
-
-
 
 
         # ------------------ TOWERS SHOOT ------------------

@@ -8,10 +8,10 @@ def hp_bar(x, y, hp, max_hp, w, h=6):
     pygame.draw.rect(screen, (0, 255, 0), (x - w//2, y, int(w * ratio), h))
 
 def draw_path(surface, path, width, alpha=120):
-    # Maak tijdelijke surface met alpha
+
     temp = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
 
-    color = (*PATH_COLOR, alpha)  # voeg alpha toe
+    color = (*PATH_COLOR, alpha) 
 
     for i in range(len(path) - 1):
         pygame.draw.line(temp, color, path[i], path[i + 1], width)

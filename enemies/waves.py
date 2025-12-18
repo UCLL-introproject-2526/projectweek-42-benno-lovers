@@ -1,10 +1,11 @@
 from enemies.enemy_base import Enemy
 import random
 
-def spawn_enemy_for_wave(wave, path, boss_already_spawned: bool):
+
+def spawn_enemy_for_wave(wave, path, level, boss_already_spawned: bool):
     # 1 boss per boss-wave
     if wave % 5 == 0 and not boss_already_spawned:
-        return Enemy(path, "boss"), True
+        return Enemy(path, "boss", level), True
 
     # anders normale logic
     if wave == 1:
