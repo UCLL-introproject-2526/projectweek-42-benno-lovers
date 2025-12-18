@@ -7,6 +7,12 @@ from settings import (
     SCALE, MAX_TOWER_LEVEL, TARGET_FIRST, TARGET_MODES, TARGET_STRONG,
     SMALL_FONT, screen
 )
+def blit_text_outline(surface, text_surf, x, y, outline_color=(255,255,255)):
+    # 1px outline rondom
+    for ox, oy in [(-1,0),(1,0),(0,-1),(0,1),(-1,-1),(1,-1),(-1,1),(1,1)]:
+        surface.blit(text_surf, (x + ox, y + oy))
+    # main text erover (normale kleur zit al in text_surf)
+    surface.blit(text_surf, (x, y))
 
 # ================== SOUND EFFECTS ================== 
 SHOOT_SOUND = pygame.mixer.Sound("assets\\sounds\\SHOTGUN_FINAL.mp3") 
@@ -113,9 +119,30 @@ class TowerBase:
         rect = sprite.get_rect(center=(int(self.x), int(self.y)))
         screen.blit(sprite, rect)
 
-        # level tekst
-        txt = SMALL_FONT.render(str(self.level), True, (255, 0, 0))
-        screen.blit(txt, (self.x - txt.get_width() // 2, self.y - txt.get_height() // 2))
+                # level badge (duidelijk leesbaar)
+        label = f"Lv {self.level}"
+        txt_main = SMALL_FONT.render(label, True, (0, 0, 0))        # zwart
+        txt_outline = SMALL_FONT.render(label, True, (255, 255, 255))  # wit rand
+
+        pad = 4
+        bx = int(self.x) - txt_main.get_width() // 2
+        by = int(self.y) - int(28 * SCALE)  # iets boven de tower
+
+        # donker achtergrondje
+        pygame.draw.rect(
+            screen,
+            (20, 20, 20),
+            (bx - pad, by - pad, txt_main.get_width() + 2*pad, txt_main.get_height() + 2*pad),
+            border_radius=6
+        )
+
+        # witte outline (8 richtingen)
+        for ox, oy in [(-1,0),(1,0),(0,-1),(0,1),(-1,-1),(1,-1),(-1,1),(1,1)]:
+            screen.blit(txt_outline, (bx + ox, by + oy))
+
+        # zwarte tekst bovenop
+        screen.blit(txt_main, (bx, by))
+
 
     # ---------------- SHOOT ----------------
     def shoot(self, enemies, bullets):
@@ -168,7 +195,7 @@ class SniperTower(Tower):
         self.sprite_scale = 0.60
         self.idle_frames = SNIPER_IDLE_FRAMES
         self.firing_frames = SNIPER_SHOOTING_FRAMES
-        self.anim_speed = 0.07
+        self.anim_speed = 0.05
 
     def shoot(self, enemies, bullets):
         if self.dragging or self.cooldown > 0:
