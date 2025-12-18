@@ -161,8 +161,8 @@ class SniperTower(Tower):
         super().__init__(x, y)
 
         self.range = int(350 * SCALE)
-        self.damage = 75
-        self.fire_rate = 90
+        self.damage = 100
+        self.fire_rate = 85
         self.base_cost = SNIPER_TOWER_COST
         self.total_value = SNIPER_TOWER_COST
         self.sprite_scale = 0.60
