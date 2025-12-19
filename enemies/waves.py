@@ -26,13 +26,13 @@ def spawn_enemy_for_wave(
     # Normale waves logic
     # -------------------------
     if wave < 2:
-        return Enemy(path, "fast" if random.random() < 0.12 else "normal"), boss_already_spawned
+        return Enemy(path, "fast" if random.random() < 0.20 else "normal"), boss_already_spawned
 
     elif wave < 3:
         r = random.random()
         if r < 0.18:
             return Enemy(path, "fast"), boss_already_spawned
-        elif r < 0.88:
+        elif r < 0.75:
             return Enemy(path, "normal"), boss_already_spawned
         else:
             return Enemy(path, "strong"), boss_already_spawned
@@ -56,7 +56,7 @@ def spawn_enemy_for_wave(
         r = random.random()
         if r < 0.22:
             return Enemy(path, "fast"), boss_already_spawned
-        elif r < 0.72:
+        elif r < 0.65:
             return Enemy(path, "normal"), boss_already_spawned
         else:
             return Enemy(path, "strong"), boss_already_spawned
