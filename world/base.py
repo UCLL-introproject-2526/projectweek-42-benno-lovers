@@ -46,14 +46,13 @@ class Base:
         return self.hp <= 0
 
     def draw(self):
-        # kies frames (alleen idle in dit geval)
+
         frames = self.idle_frames
 
-        # animatie “tick” zoals in TowerBase.draw_base()
         self.anim_index = (self.anim_index + self.anim_speed) % len(frames)
         frame = frames[int(self.anim_index)]
 
-        # schalen zoals je towers
+
         scale = self.sprite_scale * SCALE
         sprite = pygame.transform.scale(
             frame,
@@ -63,7 +62,6 @@ class Base:
         rect = sprite.get_rect(center=(int(self.x), int(self.y)))
         screen.blit(sprite, rect)
 
-        # hp bar erboven
         hp_bar(
             int(self.x),
             int(self.y - rect.height / 2 + 15), # Offset nr benede

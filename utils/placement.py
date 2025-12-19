@@ -34,4 +34,3 @@ def preview_stats_for_type(ttype):
     if ttype == "SLOW":
         return SLOW_COLOR, int(170 * SCALE)
     return TOWER_COLOR, int(150 * SCALE)
-
