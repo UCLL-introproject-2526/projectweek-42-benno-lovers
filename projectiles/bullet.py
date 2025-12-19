@@ -4,7 +4,7 @@ from settings import SCALE, BULLET_COLOR, MAX_TOWER_LEVEL, TARGET_FIRST, TARGET_
 
 
 # ================== BULLET ==================BULLET_IMAGE = pygame.image.load("bullet.png").convert_alpha()
-BULLET_IMAGE = pygame.image.load("assets\images\\bullet.png").convert_alpha()
+BULLET_IMAGE = pygame.image.load("assets/images/bullet.png").convert_alpha()
 BULLET_IMAGE = pygame.transform.scale(
     BULLET_IMAGE,
     (int(10 * SCALE), int(10 * SCALE))
