@@ -137,6 +137,8 @@ def credits_screen():
             
             "Fulltime motivator and lead A4 knipper: Staf Tuyaerts",
 
+             "Minesweeper expert: Staf Tuyaerts",
+
             "Difficulty manager: Staf Tuyaerts",
             
              "Laptop cable manager: Staf Tuyaerts",
