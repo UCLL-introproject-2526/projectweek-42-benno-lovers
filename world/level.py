@@ -93,6 +93,7 @@ class Level:
 
 
 def run_level(level: Level):
+    music_started = False
     paths = level_paths[level.level]
     base = Base(*level_base[level.level])
     # ------------------ MUSIC ------------------
@@ -102,8 +103,7 @@ def run_level(level: Level):
     else:
         pygame.mixer.music.load("assets/music/SpotiDown.App - Mother North - Satyricon.mp3")
         pygame.mixer.music.set_volume(0.65)
-    pygame.mixer.music.play(-1)
-
+    
     enemies = []
     towers = []
     bullets = []
@@ -188,6 +188,11 @@ def run_level(level: Level):
 
         # ------------------ EVENTS ------------------
         for event in pygame.event.get():
+            if event.type in (pygame.MOUSEBUTTONDOWN, pygame.KEYDOWN):
+                if not music_started:
+                    pygame.mixer.music.play(-1)
+                    music_started = True
+            
             if event.type == pygame.QUIT:
                 return None
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:

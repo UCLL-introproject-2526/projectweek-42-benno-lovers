@@ -6,7 +6,9 @@ from world.level import Level, run_level
 
 async def main():
     pygame.init()
-    pygame.mixer.init()
+    try: pygame.mixer.init()
+    except pygame.error:
+        print("Browser blocks audio.")
 
     running = True
     while running:
@@ -18,10 +20,11 @@ async def main():
         level = Level(level_number)
         run_level(level)
 
-        # ✔ verplicht asyncio-punt (zonder gameplay te breken)
         await asyncio.sleep(0)
 
     pygame.quit()
 
 if __name__ == "__main__":
     asyncio.run(main())
+else:
+    asyncio.create_task(main())
