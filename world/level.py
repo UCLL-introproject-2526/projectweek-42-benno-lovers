@@ -56,7 +56,7 @@ class Level:
         self.finished = False
 
     def update(self, dt):
-        # (wordt in jouw run_level niet gebruikt, maar laten staan)
+        # (wordt in run_level niet gebruikt, maar laten staan)
         for enemy in self.enemies[:]:
             enemy.update(dt)
             if enemy.reached_base:
