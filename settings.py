@@ -11,12 +11,9 @@ clock = pygame.time.Clock()
 # DEV
 DEV_INFINITE_MONEY = False
 # ---------------- DEV / TEST ----------------
-<<<<<<< HEAD
 START_WAVE = 1  # zet bv. 1, 5, 10, 20 ...
 
-=======
-START_WAVE = 0 # zet bv. 1, 5, 10, 20 ...
->>>>>>> 1d79a42ca476603b76ec810af0a0f5426a6f869b
+
 
 # CONSTANTEN
 TOWER_COST = 70
