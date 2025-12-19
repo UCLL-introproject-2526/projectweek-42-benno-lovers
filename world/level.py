@@ -10,7 +10,6 @@ from world.base import Base
 from towers.towers import Tower, SniperTower, SlowTower
 
 # Enemy
-
 from enemies.enemy_base import Enemy
 from enemies.waves import spawn_enemy_for_wave
 
@@ -56,7 +55,7 @@ class Level:
         self.finished = False
 
     def update(self, dt):
-        # (wordt in jouw run_level niet gebruikt, maar laten staan)
+        # (wordt in run_level niet gebruikt, maar laten staan)
         for enemy in self.enemies[:]:
             enemy.update(dt)
             if enemy.reached_base:
@@ -64,12 +63,6 @@ class Level:
                 self.enemies.remove(enemy)
         if self.base.is_destroyed():
             self.finished = True
-
-        for e in enemies[:]:
-          res = e.move()
-        if hasattr(e, "shoot"):
-                 e.shoot(towers, enemy_projectiles)
-
 
     def can_place_tower(self, x, y):
         if is_on_any_path(self, x, y):
@@ -84,7 +77,7 @@ class Level:
         else:
             surface.fill(BG_COLOR)
 
-        # ✅ pad onzichtbaar in level 4
+        # pad onzichtbaar in level 4
         if self.level != 4:
             for path in self.paths:
                 draw_path(surface, path, PATH_WIDTH)
@@ -104,17 +97,17 @@ def run_level(level: Level):
     base = Base(*level_base[level.level])
     # ------------------ MUSIC ------------------
     if level.level <= 3:
-        pygame.mixer.music.load("assets\\music\\Sower.mp3")
+        pygame.mixer.music.load("assets/music/Sower.mp3")
         pygame.mixer.music.set_volume(0.75)
     else:
-        pygame.mixer.music.load("assets\\music\\SpotiDown.App - Mother North - Satyricon.mp3")
+        pygame.mixer.music.load("assets/music/SpotiDown.App - Mother North - Satyricon.mp3")
         pygame.mixer.music.set_volume(0.65)
     pygame.mixer.music.play(-1)
 
     enemies = []
     towers = []
     bullets = []
-    enemy_projectiles = []  # ⚡ Benno lightning balls
+    enemy_projectiles = []  #  Benno lightning balls
 
     # ------------------ BALANCE CONFIG ------------------
     BALANCE = {
@@ -145,7 +138,7 @@ def run_level(level: Level):
     base_spawn_interval = int(cfg["base_spawn_sec"] * FPS)
     spawn_interval = base_spawn_interval
 
-    # ✅ 5 seconden wachten vóór wave 1 echt start (eerste enemy spawn)
+    #  5 seconden wachten vóór wave 1 echt start (eerste enemy spawn)
     initial_delay_frames = int(5 * FPS)
     spawn_timer = -initial_delay_frames + spawn_interval
 
@@ -298,7 +291,7 @@ def run_level(level: Level):
         for e in enemies[:]:
             res = e.move()
 
-            # ⚡ Benno kan schieten (maakt LightningOrb's)
+            # Benno kan schieten (maakt LightningOrb's)
             if hasattr(e, "shoot"):
                 e.shoot(towers, enemy_projectiles)
 
@@ -322,7 +315,7 @@ def run_level(level: Level):
                     towers.remove(orb.target)
                 enemy_projectiles.remove(orb)
 
-        # ✅ ALS JE DOOD BENT: stop hier met waves/spawn logic
+        #  ALS JE DOOD BENT: stop hier met waves/spawn logic
         if not game_over:
             # ------------------ WAVES / SPAWN ------------------
             spawn_timer += 1
@@ -373,11 +366,11 @@ def run_level(level: Level):
                 spawn_timer = 0
 
                 if wave <= 4:
-                    enemies_per_wave += 2
+                    enemies_per_wave += 1
                 elif wave <= 7:
-                    enemies_per_wave += 3
+                    enemies_per_wave += 2
                 else:
-                    enemies_per_wave += 4
+                    enemies_per_wave += 2
 
                 print(f"=== WAVE {wave} START ===")
 
@@ -422,7 +415,7 @@ def run_level(level: Level):
         for t in towers:
             t.draw_base(enemies)
 
-        # ⚡ draw benno orbs
+        #  draw benno orbs
         for orb in enemy_projectiles:
             orb.draw()
 

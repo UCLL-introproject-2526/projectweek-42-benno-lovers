@@ -15,13 +15,13 @@ def blit_text_outline(surface, text_surf, x, y, outline_color=(255,255,255)):
     surface.blit(text_surf, (x, y))
 
 # ================== SOUND EFFECTS ================== 
-SHOOT_SOUND = pygame.mixer.Sound("assets\\sounds\\SHOTGUN_FINAL.mp3") 
+SHOOT_SOUND = pygame.mixer.Sound("assets/sounds/SHOTGUN_FINAL.mp3") 
 SHOOT_SOUND.set_volume(1) 
-SNIPER_SOUND = pygame.mixer.Sound("assets\\sounds\\SNIPER_SCHOT_ FINAL.mp3") 
+SNIPER_SOUND = pygame.mixer.Sound("assets/sounds/SNIPER_SCHOT_ FINAL.mp3") 
 SNIPER_SOUND.set_volume(1) 
-SLOW_SHOOT_SOUND = pygame.mixer.Sound("assets\\sounds\\EXPLOSIE_FINAL.mp3") 
+SLOW_SHOOT_SOUND = pygame.mixer.Sound("assets/sounds/EXPLOSIE_FINAL.mp3") 
 SLOW_SHOOT_SOUND.set_volume(1) 
-POISON_SHOOT_SOUND = pygame.mixer.Sound("assets\\sounds\\SHOTGUN_FINAL.mp3") 
+POISON_SHOOT_SOUND = pygame.mixer.Sound("assets/sounds/SHOTGUN_FINAL.mp3") 
 POISON_SHOOT_SOUND.set_volume(1) 
 SHOOT_CHANNEL = pygame.mixer.Channel(0) 
 SNIPER_CHANNEL = pygame.mixer.Channel(1) 
