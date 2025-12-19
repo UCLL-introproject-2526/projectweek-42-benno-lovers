@@ -45,8 +45,8 @@ def draw_enemy_path_preview(paths, tick, spacing_px=None):
             # verschuiving, pixels bewegen
             offset = (-tick * max(1.0, 2.2 * SCALE)) % spacing_px
 
-            # meerder cirkels plaatsen
-            s = -offset
+            
+            s = -offset  #hoever je van segment bent
             while s < seg_len:
                 t = max(0.0, min(1.0, s / seg_len))
                 px = lerp(x1, x2, t)
