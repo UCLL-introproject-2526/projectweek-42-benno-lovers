@@ -70,7 +70,7 @@ class TowerBase:
 
         self.range = int(150 * SCALE)
         self.fire_rate = 30
-        self.damage = 10
+        self.damage = 15
 
         self.target_mode = TARGET_FIRST
 

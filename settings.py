@@ -10,9 +10,9 @@ FPS = 60
 clock = pygame.time.Clock()
 
 # DEV
-DEV_INFINITE_MONEY = True
+DEV_INFINITE_MONEY = False
 # ---------------- DEV / TEST ----------------
-START_WAVE = 20  # zet bv. 1, 5, 10, 20 ...
+START_WAVE = 0 # zet bv. 1, 5, 10, 20 ...
 
 
 # CONSTANTEN
