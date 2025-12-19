@@ -11,7 +11,7 @@ def spawn_enemy_for_wave(
     enemies_in_wave: int
 ):
     # -------------------------
-    # ✅ BENNO OVERRIDE
+    # BENNO OVERRIDE
     # Level 4, Wave 20: Benno komt als "boss" op de laatste spawn van de wave
     # -------------------------
     if (
