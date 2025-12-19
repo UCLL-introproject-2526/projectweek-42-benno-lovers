@@ -222,15 +222,15 @@ class BennoBoss(Enemy):
 
         if hp_pct > 0.66:
             count = 1
-            cd = int(2.2 * FPS)
+            cd = int(1.6 * FPS)
             speed = 5.0 * SCALE
         elif hp_pct > 0.33:
             count = 2
-            cd = int(1.6 * FPS)
+            cd = int(1 * FPS)
             speed = 5.6 * SCALE
         else:
             count = 3
-            cd = int(1.1 * FPS)
+            cd = int(0.5 * FPS)
             speed = 6.2 * SCALE
 
         for _ in range(count):
