@@ -1,4 +1,3 @@
-# settings.py
 import pygame
 
 pygame.init()
@@ -13,7 +12,6 @@ clock = pygame.time.Clock()
 DEV_INFINITE_MONEY = False
 # ---------------- DEV / TEST ----------------
 START_WAVE = 0 # zet bv. 1, 5, 10, 20 ...
-
 
 # CONSTANTEN
 TOWER_COST = 70

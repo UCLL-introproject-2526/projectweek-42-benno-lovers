@@ -7,6 +7,7 @@ from world.maps import level_paths
 def is_on_any_path(level, x, y):
     return any(is_on_path(x, y, p) for p in level_paths[level.level])
 
+
 def too_close_to_tower(towers, x, y):
     for t in towers:
         if math.hypot(t.x - x, t.y - y) < MIN_TOWER_DISTANCE:

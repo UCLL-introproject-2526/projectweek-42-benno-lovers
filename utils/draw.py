@@ -55,8 +55,8 @@ def draw_enemy_path_preview(paths, tick, spacing_px=None):
                 pygame.draw.circle(
                     screen,
                     (160, 160, 160),
-                    (int(px), int(py)),
-                    max(6, int(8 * SCALE)),
+                    (int(px), int(py)), # middelpunt
+                    max(6, int(8 * SCALE)), #straal
                     1
                 )
                 s += spacing_px
