@@ -174,9 +174,10 @@ def credits_screen():
 
 
 def start_screen():
-    pygame.mixer.music.load("assets\\music\\Concern Pt.2 Patricks Soul.mp3")
+    music_started = False
+    pygame.mixer.music.load("assets/music/Concern Pt.2 Patricks Soul.mp3")
     pygame.mixer.music.set_volume(1)
-    pygame.mixer.music.play(-1)
+    
 
     selecting = True
     while selecting:
@@ -228,6 +229,10 @@ def start_screen():
         pygame.display.flip()
 
         for e in pygame.event.get():
+            if e.type in (pygame.MOUSEBUTTONDOWN, pygame.KEYDOWN):
+                if not music_started:
+                    pygame.mixer.music.play(-1)
+                    music_started = True
             if e.type == pygame.QUIT:
                 pygame.quit()
                 raise SystemExit
