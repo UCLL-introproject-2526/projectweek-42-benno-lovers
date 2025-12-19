@@ -123,24 +123,27 @@ def credits_screen():
             
             "Fixer of broken code: Killian Van Acker",
             
-            "Candy provider: Killian Van Acker",
+            "Candy provider and junior map designer: Killian Van Acker",
             
             "Senior art and animation director: Bram Switters",
 
-            "Professional gooner: Bram Switters",
+            "Professional gooner and junior programmer: Bram Switters",
+            "Lead map designer: Bram Switters",
             
 
-            "Music Maestro: Alexander Rijnders",
+            "Music Maestro and general sound design: Alexander Rijnders",
             
-            "Publisher: Alexander Rijnders",
+            "Publisher and junior programmer: Alexander Rijnders",
             
             "Fulltime motivator and lead A4 knipper: Staf Tuyaerts",
+
+            "Difficulty manager: Staf Tuyaerts",
             
              "Laptop cable manager: Staf Tuyaerts",
             
             "Poster designer: ChatGPT plus from killian's girlfriend Zahra",
             
-            "Concept designer: Artan Helewaut",
+            "Concept designer and junior programmer: Artan Helewaut",
             
              "Pair programmer: Artan Helewaut",
             
