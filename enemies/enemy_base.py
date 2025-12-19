@@ -5,7 +5,7 @@ from projectiles.lightning_orb import LightningOrb
 from settings import SCALE, FPS, screen
 from utils.draw import hp_bar
 from enemies.enemy_types import ENEMY_TYPES
-
+from projectiles.lightning_orb import LightningOrb
 # ---------- SPRITE CACHE ----------
 # key = (enemy_type, level_id)
 _SPRITE_CACHE = {}
@@ -232,8 +232,6 @@ class BennoBoss(Enemy):
             count = 3
             cd = int(1.1 * FPS)
             speed = 6.2 * SCALE
-
-        from projectiles.lightning_orb import LightningOrb
 
         for _ in range(count):
             target = min(towers, key=lambda t: (t.x - self.x) ** 2 + (t.y - self.y) ** 2)
