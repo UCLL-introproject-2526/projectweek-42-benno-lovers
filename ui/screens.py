@@ -131,7 +131,7 @@ def credits_screen():
             "Lead map designer: Bram Switters",
             
 
-            "Music Maestro: Alexander Rijnders",
+            "Music Maestro and general sound design: Alexander Rijnders",
             
             "Publisher and junior programmer: Alexander Rijnders",
             
