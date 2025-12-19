@@ -143,7 +143,7 @@ def credits_screen():
             
              "Laptop cable manager: Staf Tuyaerts",
             
-            "Poster designer: ChatGPT plus from killian's girlfriend Zahra",
+            "Poster designer: ChatGPT plus from Killian's girlfriend Zahra",
             
             "Concept designer and junior programmer: Artan Helewaut",
             
