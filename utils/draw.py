@@ -23,14 +23,12 @@ def draw_path(surface, path, width, alpha=120):
     surface.blit(temp, (0, 0))
 
 
-# ================== PATH PREVIEW (cirkels volgen exact enemy route) ==================
-# Dit tekent een "ghost train" van cirkels die het pad volgen.
-# Gebruik dit in placement preview zodat je ziet hoe enemies lopen.
+# ================== PATH PREVIEW ==================
 def draw_enemy_path_preview(paths, tick, spacing_px=None):
     if spacing_px is None:
-        spacing_px = max(26, int(34 * SCALE))  # afstand tussen preview-cirkels
+        spacing_px = max(26, int(34 * SCALE))  # afstand cirkels
 
-    # helper: lineair interpoleren
+
     def lerp(a, b, t):
         return a + (b - a) * t
 
@@ -44,24 +42,21 @@ def draw_enemy_path_preview(paths, tick, spacing_px=None):
             if seg_len <= 0:
                 continue
 
-            # verschuiving zodat de cirkels "bewegen" langs het pad
-            # tick bepaalt offset in pixels
+            # verschuiving, pixels bewegen
             offset = (-tick * max(1.0, 2.2 * SCALE)) % spacing_px
 
-            # plaats meerdere cirkels op dit segment
-            # start bij -offset zodat het mooi doorloopt over segmenten
+            # meerder cirkels plaatsen
             s = -offset
             while s < seg_len:
                 t = max(0.0, min(1.0, s / seg_len))
                 px = lerp(x1, x2, t)
                 py = lerp(y1, y2, t)
 
-                # subtiele ghost (ring)
                 pygame.draw.circle(
                     screen,
                     (160, 160, 160),
-                    (int(px), int(py)),
-                    max(6, int(8 * SCALE)),
+                    (int(px), int(py)), # middelpunt
+                    max(6, int(8 * SCALE)), #straal
                     1
                 )
                 s += spacing_px

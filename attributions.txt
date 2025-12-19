@@ -1,0 +1,24 @@
+ASSET ATTRIBUTION FILE
+======================
+
+Game: Tower Defense Project
+
+--------------------------------------------------
+
+IMAGES
+------
+
+Wolf Enemy Sprite
+-----------------
+Artist: Stephen "Redshrike" Challener
+Contributor: William.Thompsonj
+Source: https://opengameart.org/
+License: OpenGameArt.org license (Attribution required)
+
+Sprite/Artwork: NormalIdle, NormalShooting, SlowIdle, SlowShooting
+Source: https://www.cleanpng.com/png-super-time-force-pixel-warriors-pixel-art-pixel-so-3159516/
+Website: cleanpng.com
+License: Unknown / unspecified (used under presumed fair use for educational project)
+Notes: Original author unknown; used for educational / non-commercial game project. If proper credit must be given to original author, please contact the project creator.
+
+
