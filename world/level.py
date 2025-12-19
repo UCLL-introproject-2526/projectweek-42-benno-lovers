@@ -10,6 +10,7 @@ from world.base import Base
 from towers.towers import Tower, SniperTower, SlowTower
 
 # Enemy
+
 from enemies.enemy_base import Enemy
 from enemies.waves import spawn_enemy_for_wave
 
@@ -63,6 +64,12 @@ class Level:
                 self.enemies.remove(enemy)
         if self.base.is_destroyed():
             self.finished = True
+
+        for e in enemies[:]:
+          res = e.move()
+        if hasattr(e, "shoot"):
+                 e.shoot(towers, enemy_projectiles)
+
 
     def can_place_tower(self, x, y):
         if is_on_any_path(self, x, y):

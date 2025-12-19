@@ -12,7 +12,7 @@ clock = pygame.time.Clock()
 # DEV
 DEV_INFINITE_MONEY = True
 # ---------------- DEV / TEST ----------------
-START_WAVE = 19  # zet bv. 1, 5, 10, 20 ...
+START_WAVE = 20  # zet bv. 1, 5, 10, 20 ...
 
 
 # CONSTANTEN
